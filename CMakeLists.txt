@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12.0)
 project(lab10 LANGUAGES CXX C)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED "ON")
 
 # Set default build type to Release.
@@ -37,3 +37,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfloat-conversion -Wmissing-braces -Wno
 
 add_executable(progetto progetto.cpp FluidStructureProblem.cpp)
 deal_ii_setup_target(progetto)
+
+# add_executable(originale originaleFSI.cpp)
+# deal_ii_setup_target(originale)

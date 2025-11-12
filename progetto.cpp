@@ -9,31 +9,23 @@ int main(int argc, char *argv[])
 {
     try
     {
+        Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
         FluidStructureProblem flow_problem(1, 1);
         flow_problem.make_grid();
+        flow_problem.setup_dofs();
 
-        for (unsigned int refinement_cycle = 0; refinement_cycle < 10 - 2 * flow_problem.dim;
-             ++refinement_cycle)
-        {
-            std::cout << "Refinement cycle " << refinement_cycle << std::endl;
+        flow_problem.pcout << "   Assembling..." << std::endl;
+        flow_problem.assemble_system();
 
-            if (refinement_cycle > 0)
-                flow_problem.refine_mesh();
+        flow_problem.pcout << "   Solving..." << std::endl;
+        flow_problem.solve();
 
-            flow_problem.setup_dofs();
+        flow_problem.pcout << "   Writing output..." << std::endl;
+        flow_problem.output_results(0);
 
-            std::cout << "   Assembling..." << std::endl;
-            flow_problem.assemble_system();
-
-            std::cout << "   Solving..." << std::endl;
-            flow_problem.solve();
-
-            std::cout << "   Writing output..." << std::endl;
-            flow_problem.output_results(refinement_cycle);
-
-            std::cout << std::endl;
-        }
+        flow_problem.pcout << std::endl;
     }
+    
     catch (std::exception &exc)
     {
         std::cerr << std::endl
