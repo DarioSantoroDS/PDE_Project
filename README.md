@@ -39,7 +39,7 @@ mkdir build
 cd build
 cmake ..
 make -j
-./fsi
+./fsi ```
 
 ## Generated Files
 
