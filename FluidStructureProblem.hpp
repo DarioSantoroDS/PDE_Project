@@ -45,6 +45,7 @@
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/vector.h>
+#include <deal.II/lac/sparsity_tools.h>
 
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
@@ -53,7 +54,7 @@
 
 #include <petscviewer.h> // Essential for the viewer commands
 
-// #define FORCE_USE_OF_TRILINOS
+#define FORCE_USE_OF_TRILINOS
 
 
 #include <fstream>
@@ -117,10 +118,14 @@ public:
   void
   solve();
   void
+  solve_iterative();
+  void
   output_results(const unsigned int refinement_cycle) const;
-
+#ifdef DEBUG
   void
   output_matrix() const;
+#endif
+
   // void refine_mesh();
 
   class StokesBoundaryValues : public Function<dim>

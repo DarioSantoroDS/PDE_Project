@@ -51,7 +51,7 @@ FluidStructureProblem::setup_dofs()
 
   std::vector<unsigned int> block_component(dim + 1 + dim, 0);
   block_component[dim] = 1;
-  for (int i = dim + 1; i < dim + dim + 1; ++i)
+  for (unsigned int i = dim + 1; i < dim + dim + 1; ++i)
     block_component[i] = 2;
   DoFRenumbering::component_wise(dof_handler, block_component);
 
@@ -535,10 +535,11 @@ FluidStructureProblem::assemble_interface_term(
     }
   pcout << "Assembly of interface term done!" << std::endl;
 }
-
+#ifdef DEBUG
 void
 FluidStructureProblem::output_matrix() const
 {
+#  ifdef USE_PETSC_LA
   PetscViewer mat_viewer;
   // Create an ASCII viewer that writes to "system_matrix.m"
   PetscViewerASCIIOpen(system_matrix.get_mpi_communicator(),
@@ -562,14 +563,15 @@ FluidStructureProblem::output_matrix() const
   VecView(system_rhs, vec_viewer);
   PetscViewerPopFormat(vec_viewer);
   PetscViewerDestroy(&vec_viewer);
+#  endif
 }
-
+#endif
 void
 FluidStructureProblem::solve()
 {
-  pcout << "solvingthissutff" << std::endl;  
+  pcout << "solvingthissutff" << std::endl;
   LA::MPI::Vector completely_distributed_solution(locally_owned_dofs,
-                                                MPI_COMM_WORLD);
+                                                  MPI_COMM_WORLD);
 #ifdef FORCE_USE_OF_TRILINOS
   SolverControl                  solver_control(1, 0);
   TrilinosWrappers::SolverDirect direct(solver_control);
@@ -580,6 +582,43 @@ FluidStructureProblem::solve()
   solver.set_symmetric_mode(false);
   solver.solve(system_matrix, completely_distributed_solution, system_rhs);
 
+#endif
+  constraints.distribute(completely_distributed_solution);
+  locally_relevant_solution = completely_distributed_solution;
+}
+
+void
+FluidStructureProblem::solve_iterative()
+{
+  pcout << "solvingthissutff iterative" << std::endl;
+  LA::MPI::Vector completely_distributed_solution(locally_owned_dofs,
+                                                  MPI_COMM_WORLD);
+  SolverControl   solver_control(100000, 1e-6 * system_rhs.l2_norm());
+#ifdef FORCE_USE_OF_TRILINOS
+  LA::MPI::PreconditionILU preconditioner;
+  preconditioner.initialize(system_matrix);
+  SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
+  solver.solve(system_matrix,
+               completely_distributed_solution,
+               system_rhs,
+               preconditioner);
+  pcout << "  " << solver_control.last_step() << " GMRES iterations"
+        << std::endl;
+#else
+  Assert(false, ExcNotImplemented());
+
+  // // PETScWrappers::PreconditionBlockJacobi::AdditionalData data;
+  // // // This tells Block Jacobi to use ILU on the local blocks
+  // // data.internal_preconditioner_type = "ilu";
+  // PETScWrappers::PreconditionBoomerAMG preconditioner(MPI_COMM_WORLD);
+  // preconditioner.initialize(system_matrix);
+  // PETScWrappers::SolverGMRES solver(solver_control, MPI_COMM_WORLD);
+  // solver.solve(system_matrix,
+  //              completely_distributed_solution,
+  //              system_rhs,
+  //              preconditioner);
+  // pcout << "  " << solver_control.last_step() << " GMRES iterations"
+  //       << std::endl;
 #endif
   constraints.distribute(completely_distributed_solution);
   locally_relevant_solution = completely_distributed_solution;
@@ -622,7 +661,6 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
     "./", "solution", refinement_cycle, MPI_COMM_WORLD, 2, 8);
   pcout << "   Written solution_" << refinement_cycle << ".pvtu" << std::endl;
 }
-
 // void FluidStructureProblem::refine_mesh()
 // {
 //     Vector<float> stokes_estimated_error_per_cell(
