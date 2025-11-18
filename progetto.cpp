@@ -9,14 +9,21 @@ int main(int argc, char* argv[])
 {
     // try
     // {
+#ifdef DEBUG
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv,1);
-        FluidStructureProblem flow_problem(1, 1);
+    std::cout << "im in debug mode" << std::endl;
+#else
+    Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
+#endif
+    FluidStructureProblem flow_problem(1, 1);
         flow_problem.make_grid();
         flow_problem.setup_dofs();
 
         flow_problem.pcout << "   Assembling..." << std::endl;
         flow_problem.assemble_system();
+#ifdef DEBUG
         flow_problem.output_matrix();
+#endif
         flow_problem.pcout << "   Solving..." << std::endl;
         flow_problem.solve();
 
