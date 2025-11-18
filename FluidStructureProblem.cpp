@@ -49,11 +49,11 @@ FluidStructureProblem::setup_dofs()
   set_active_fe_indices();
   dof_handler.distribute_dofs(fe_collection);
 
-  // std::vector<unsigned int> block_component(dim + 1 + dim, 0);
-  // block_component[dim] = 1;
-  // for (int i = dim + 1; i < dim + dim + 1; ++i)
-  //   block_component[i] = 2;
-  // DoFRenumbering::component_wise(dof_handler, block_component);
+  std::vector<unsigned int> block_component(dim + 1 + dim, 0);
+  block_component[dim] = 1;
+  for (int i = dim + 1; i < dim + dim + 1; ++i)
+    block_component[i] = 2;
+  DoFRenumbering::component_wise(dof_handler, block_component);
 
   pcout << "Initializing dofs..." << std::endl;
   locally_owned_dofs = dof_handler.locally_owned_dofs();
@@ -539,29 +539,17 @@ FluidStructureProblem::assemble_interface_term(
 void
 FluidStructureProblem::output_matrix() const
 {
-  // ... inside your run() or solve() method ...
-
-  // 1. EXPORT MATRIX (A)
-  // ---------------------------------------------------------
   PetscViewer mat_viewer;
   // Create an ASCII viewer that writes to "system_matrix.m"
   PetscViewerASCIIOpen(system_matrix.get_mpi_communicator(),
                        "system_matrix.m",
                        &mat_viewer);
-
   // Set format to MATLAB (this produces a coordinate list)
   PetscViewerPushFormat(mat_viewer, PETSC_VIEWER_ASCII_MATLAB);
-
   // View the matrix (deal.II object converts to PETSc Mat automatically)
   MatView(system_matrix, mat_viewer);
-
-  // Cleanup
   PetscViewerPopFormat(mat_viewer);
   PetscViewerDestroy(&mat_viewer);
-
-
-  // 2. EXPORT RHS VECTOR (b)
-  // ---------------------------------------------------------
   PetscViewer vec_viewer;
   PetscViewerASCIIOpen(system_rhs.get_mpi_communicator(),
                        "system_rhs.m",
@@ -572,8 +560,6 @@ FluidStructureProblem::output_matrix() const
 
   // View the vector
   VecView(system_rhs, vec_viewer);
-
-  // Cleanup
   PetscViewerPopFormat(vec_viewer);
   PetscViewerDestroy(&vec_viewer);
 }
