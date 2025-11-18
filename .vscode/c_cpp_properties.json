@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/u/sw/toolchains/gcc-glibc/11.2.0/pkgs/dealii/9.3.1/include"
+            ],
+            "defines": [],
+            "compilerPath": "/u/sw/toolchains/gcc-glibc/11.2.0/prefix/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ],
+    "version": 4
+}
