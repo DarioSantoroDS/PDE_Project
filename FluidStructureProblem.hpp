@@ -228,10 +228,10 @@ public:
     // pressure mass matrix.
     void
     initialize(const LA::MPI::SparseMatrix &velocity_stiffness_, // A(0,0)
-               const LA::MPI::SparseMatrix &pressure_mass_, // A(1,1)
+               const LA::MPI::SparseMatrix &pressure_mass_, // pressurematrix(1,1)
                const LA::MPI::SparseMatrix &B_, // A(1,0)
                const LA::MPI::SparseMatrix &D1_, // A(2,0)
-               const LA::MPI::SparseMatrix &D2_  // A(2,1)
+               const LA::MPI::SparseMatrix &D2_,  // A(2,1)
                const LA::MPI::SparseMatrix &solid_matrix_ // A(2,2)
     )                  
     {
@@ -244,7 +244,11 @@ public:
 
       preconditioner_velocity.initialize(velocity_stiffness_);
       preconditioner_pressure.initialize(pressure_mass_);
-      preconditioner_solid.initialize(solid_matrix);
+      preconditioner_solid.initialize(solid_matrix_,
+                                     TrilinosWrappers::PreconditionSSOR::
+                                       AdditionalData(1.0
+                                        , 1 //added by copilot
+                                      ));
     }
 
     // Application of the preconditioner.
@@ -308,16 +312,16 @@ public:
     const LA::MPI::SparseMatrix *D2;
 
     // Preconditioner used for the pressure block.
-    TrilinosWrappers::PreconditionJacobi preconditioner_solid;
+    TrilinosWrappers::PreconditionSSOR preconditioner_solid;
 
     // Solid matrix.
     const LA::MPI::SparseMatrix *solid_matrix;
 
     // Temporary vector stokes
-    mutable LA::MPI::MPI::Vector tmpStokes;
+    mutable LA::MPI::Vector tmpStokes;
 
     // Temporary vector solid
-    mutable LA::MPI::MPI::Vector tmpSolid;
+    mutable LA::MPI::Vector tmpSolid;
   };
 
 private:

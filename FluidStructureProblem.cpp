@@ -180,7 +180,10 @@ FluidStructureProblem::setup_dofs()
   // extensively in the introduction, and use it to initialize the matrix;
   // then also set vectors to their correct sizes:
 #ifdef FORCE_USE_OF_TRILINOS
-  TrilinosWrappers::BlockSparsityPattern dsp(block_owned_dofs,block_owned_dofs,block_relevant_dofs,MPI_COMM_WORLD);
+  TrilinosWrappers::BlockSparsityPattern dsp(block_owned_dofs,
+                                             block_owned_dofs,
+                                             block_relevant_dofs,
+                                             MPI_COMM_WORLD);
 #endif
   // for (unsigned int i = 0; i < fe_collection.n_blocks(); ++i)
   //   for (unsigned int j = 0; j < fe_collection.n_blocks(); ++j)
@@ -209,7 +212,7 @@ FluidStructureProblem::setup_dofs()
                                        true,
                                        cell_coupling,
                                        face_coupling,
-                                      mpi_rank);
+                                       mpi_rank);
   // SparsityTools::distribute_sparsity_pattern(dsp,
   //                                            locally_owned_dofs,
   //                                            MPI_COMM_WORLD,
@@ -219,6 +222,26 @@ FluidStructureProblem::setup_dofs()
 
   system_matrix.reinit(dsp);
   system_rhs.reinit(block_owned_dofs, MPI_COMM_WORLD);
+  Table<2, DoFTools::Coupling> coupling_pressure(fe_collection.n_components(),
+                                                 fe_collection.n_components());
+
+  for (unsigned int c = 0; c < dim + 1; ++c)
+    {
+      for (unsigned int d = 0; d < dim + 1; ++d)
+        {
+          if (c == dim && d == dim) // pressure-pressure term
+            coupling_pressure[c][d] = DoFTools::always;
+          else // other combinations
+            coupling_pressure[c][d] = DoFTools::none;
+        }
+    }
+  TrilinosWrappers::BlockSparsityPattern sparsity_pressure_mass(
+    block_owned_dofs, MPI_COMM_WORLD);
+  DoFTools::make_sparsity_pattern(dof_handler,
+                                  coupling_pressure,
+                                  sparsity_pressure_mass);
+  sparsity_pressure_mass.compress();
+  pressure_mass.reinit(sparsity_pressure_mass);
 }
 
 void
@@ -227,6 +250,7 @@ FluidStructureProblem::assemble_system()
   pcout << "Assembling the system..." << mpi_rank << std::endl;
   system_matrix = 0;
   system_rhs    = 0;
+  pressure_mass = 0;
 
   const QGauss<dim> stokes_quadrature(stokes_degree + 2);
   const QGauss<dim> elasticity_quadrature(elasticity_degree + 2);
@@ -269,7 +293,9 @@ FluidStructureProblem::assemble_system()
   FullMatrix<double> local_matrix;
   FullMatrix<double> local_interface_matrix(elasticity_dofs_per_cell,
                                             stokes_dofs_per_cell);
-  Vector<double>     local_rhs;
+  FullMatrix<double> cell_pressure_mass_matrix;
+
+  Vector<double> local_rhs;
 
   std::vector<types::global_dof_index> local_dof_indices;
   std::vector<types::global_dof_index> neighbor_dof_indices(
@@ -305,9 +331,17 @@ FluidStructureProblem::assemble_system()
 
       const FEValues<dim> &fe_values = hp_fe_values.get_present_fe_values();
 
+      std::vector<types::global_dof_index> dof_indices(
+        cell->get_fe().n_dofs_per_cell());
+      cell->get_dof_indices(dof_indices);
+
+
       local_matrix.reinit(cell->get_fe().n_dofs_per_cell(),
                           cell->get_fe().n_dofs_per_cell());
       local_rhs.reinit(cell->get_fe().n_dofs_per_cell());
+
+      cell_pressure_mass_matrix.reinit(cell->get_fe().n_dofs_per_cell(),
+                                       cell->get_fe().n_dofs_per_cell());
 
       // With all of this done, we continue to assemble the cell terms for
       // cells that are part of the Stokes and elastic regions. While we
@@ -346,6 +380,11 @@ FluidStructureProblem::assemble_system()
                      stokes_div_phi_u[i] * stokes_phi_p[j] -
                      stokes_phi_p[i] * stokes_div_phi_u[j]) *
                     fe_values.JxW(q);
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                  cell_pressure_mass_matrix(i, j) +=
+                    fe_values[pressure].value(i, q) *
+                    fe_values[pressure].value(j, q) * fe_values.JxW(q);
             }
         }
       else
@@ -511,9 +550,12 @@ FluidStructureProblem::assemble_system()
                                                          system_matrix);
                 }
             }
+      pressure_mass.add(dof_indices, cell_pressure_mass_matrix);
     }
   system_matrix.compress(VectorOperation::add);
   system_rhs.compress(VectorOperation::add);
+  pressure_mass.compress(VectorOperation::add);
+
   pcout << "done assembly" << std::endl;
 }
 
@@ -590,7 +632,7 @@ FluidStructureProblem::output_matrix() const
   VecView(system_rhs, vec_viewer);
   PetscViewerPopFormat(vec_viewer);
   PetscViewerDestroy(&vec_viewer);
-#endif
+#  endif
 }
 #endif
 // void
@@ -618,22 +660,22 @@ FluidStructureProblem::solve_iterative()
 {
   pcout << "solvingthissutff iterative" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
-                                                  MPI_COMM_WORLD);
-  SolverControl   solver_control(1000000, 1e-6 * system_rhs.l2_norm());
+                                                       MPI_COMM_WORLD);
+  SolverControl        solver_control(1000000, 1e-6 * system_rhs.l2_norm());
 #ifdef FORCE_USE_OF_TRILINOS
-  BlockILUPreconditioner preconditioner;
-  TrilinosWrappers::PreconditionILU::AdditionalData data;
-  data.ilu_fill = 1; // Fill-in factor (higher = more accurate but slower)
-  data.ilu_atol = 0.01; // Drop tolerance
-  data.ilu_rtol = 1.01;
-  data.overlap   = 0;    // Set to 1 or 2 for better parallel consistency
-  preconditioner.initialize(system_matrix,data);
+
+  PreconditionBlockTriangular preconditioner;
+  preconditioner.initialize(system_matrix.block(0, 0),
+                            pressure_mass.block(1, 1),
+                            system_matrix.block(1, 0),
+                            system_matrix.block(2, 0),
+                            system_matrix.block(2, 1),
+                            system_matrix.block(2, 2));
   SolverGMRES<TrilinosWrappers::MPI::BlockVector> solver(solver_control);
   solver.solve(system_matrix,
                completely_distributed_solution,
-               system_rhs
-               ,preconditioner
-              );
+               system_rhs,
+               preconditioner);
   pcout << "  " << solver_control.last_step() << " GMRES iterations"
         << std::endl;
 #else
