@@ -221,6 +221,105 @@ public:
   protected:
   };
 
+  class PreconditionBlockTriangular
+  {
+  public:
+    // Initialize the preconditioner, given the velocity stiffness matrix, the
+    // pressure mass matrix.
+    void
+    initialize(const LA::MPI::SparseMatrix &velocity_stiffness_, // A(0,0)
+               const LA::MPI::SparseMatrix &pressure_mass_, // A(1,1)
+               const LA::MPI::SparseMatrix &B_, // A(1,0)
+               const LA::MPI::SparseMatrix &D1_, // A(2,0)
+               const LA::MPI::SparseMatrix &D2_  // A(2,1)
+               const LA::MPI::SparseMatrix &solid_matrix_ // A(2,2)
+    )                  
+    {
+      velocity_stiffness = &velocity_stiffness_;
+      pressure_mass      = &pressure_mass_;
+      B                  = &B_;
+      D1                 = &D1_;
+      D2                 = &D2_;
+      solid_matrix       = &solid_matrix_;
+
+      preconditioner_velocity.initialize(velocity_stiffness_);
+      preconditioner_pressure.initialize(pressure_mass_);
+      preconditioner_solid.initialize(solid_matrix);
+    }
+
+    // Application of the preconditioner.
+    void
+    vmult(TrilinosWrappers::MPI::BlockVector       &dst,
+          const TrilinosWrappers::MPI::BlockVector &src) const
+    {
+      SolverControl                           solver_control_velocity(1000,
+                                            1e-2 * src.block(0).l2_norm());
+      SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_velocity(
+        solver_control_velocity);
+      solver_cg_velocity.solve(*velocity_stiffness,
+                               dst.block(0),
+                               src.block(0),
+                               preconditioner_velocity);
+
+      tmpStokes.reinit(src.block(1));
+      B->vmult(tmpStokes, dst.block(0));
+      tmpStokes.sadd(-1.0, src.block(1));
+
+      SolverControl                           solver_control_pressure(1000,
+                                            1e-2 * src.block(1).l2_norm());
+      SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_pressure(
+        solver_control_pressure);
+      solver_cg_pressure.solve(*pressure_mass,
+                               dst.block(1),
+                               tmpStokes,
+                               preconditioner_pressure);
+
+      tmpSolid.reinit(src.block(2));
+      D1->vmult(tmpSolid, dst.block(0));
+      D2->vmult_add(tmpSolid, dst.block(1));
+      tmpSolid.sadd(-1.0, src.block(2));
+
+      SolverControl                           solver_control_solid(1000,
+                                            1e-2 * src.block(2).l2_norm());
+
+      preconditioner_solid.vmult(dst.block(2), tmpSolid);
+    }
+
+  protected:
+    // Velocity stiffness matrix.
+    const LA::MPI::SparseMatrix *velocity_stiffness;
+
+    // Preconditioner used for the velocity block.
+    TrilinosWrappers::PreconditionILU preconditioner_velocity;
+
+    // Pressure mass matrix.
+    const LA::MPI::SparseMatrix *pressure_mass;
+
+    // Preconditioner used for the pressure block.
+    TrilinosWrappers::PreconditionILU preconditioner_pressure;
+
+    // B matrix.
+    const LA::MPI::SparseMatrix *B;
+
+    // D1 matrix.
+    const LA::MPI::SparseMatrix *D1;
+
+    // D2 matrix.
+    const LA::MPI::SparseMatrix *D2;
+
+    // Preconditioner used for the pressure block.
+    TrilinosWrappers::PreconditionJacobi preconditioner_solid;
+
+    // Solid matrix.
+    const LA::MPI::SparseMatrix *solid_matrix;
+
+    // Temporary vector stokes
+    mutable LA::MPI::MPI::Vector tmpStokes;
+
+    // Temporary vector solid
+    mutable LA::MPI::MPI::Vector tmpSolid;
+  };
+
 private:
   enum
   {
@@ -271,7 +370,7 @@ private:
   DoFHandler<dim>       dof_handler;
   const double          viscosity;
   const double          lambda;
-  const double          mu;
+  const double          mu; 
 
 public:
   ConditionalOStream pcout;
@@ -281,6 +380,7 @@ private:
 
   SparsityPattern       sparsity_pattern;
   LA::MPI::BlockSparseMatrix system_matrix;
+  LA::MPI::BlockSparseMatrix pressure_mass;
   LA::MPI::BlockVector       solution;
   LA::MPI::BlockVector       locally_relevant_solution;
   LA::MPI::BlockVector       system_rhs;
