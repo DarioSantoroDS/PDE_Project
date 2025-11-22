@@ -25,7 +25,8 @@ int main(int argc, char* argv[])
         flow_problem.output_matrix();
 #endif
         flow_problem.pcout << "   Solving..." << std::endl;
-        flow_problem.solve();
+        flow_problem.solve_iterative();
+        // flow_problem.solve();
 
         flow_problem.pcout << "   Writing output..." << std::endl;
         flow_problem.output_results(0);

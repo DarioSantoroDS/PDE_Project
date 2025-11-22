@@ -48,7 +48,7 @@ FluidStructureProblem::setup_dofs()
 {
   set_active_fe_indices();
   dof_handler.distribute_dofs(fe_collection);
-
+  // DoFRenumbering::Cuthill_McKee(dof_handler);
   std::vector<unsigned int> block_component(dim + 1 + dim, 0);
   block_component[dim] = 1;
   for (unsigned int i = dim + 1; i < dim + dim + 1; ++i)
@@ -58,10 +58,31 @@ FluidStructureProblem::setup_dofs()
   pcout << "Initializing dofs..." << std::endl;
   locally_owned_dofs = dof_handler.locally_owned_dofs();
   DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
-  locally_relevant_solution.reinit(locally_owned_dofs,
-                                   locally_relevant_dofs,
+
+  std::vector<types::global_dof_index> dofs_per_block =
+    DoFTools::count_dofs_per_fe_block(dof_handler, block_component);
+  const unsigned int n_u = dofs_per_block[0];
+  const unsigned int n_p = dofs_per_block[1];
+  const unsigned int n_d = dofs_per_block[2];
+
+  block_owned_dofs.resize(3);
+  block_relevant_dofs.resize(3);
+  block_owned_dofs[0] = locally_owned_dofs.get_view(0, n_u);
+  block_owned_dofs[1] = locally_owned_dofs.get_view(n_u, n_u + n_p);
+  block_owned_dofs[2] = locally_owned_dofs.get_view(n_u + n_p, n_u + n_p + n_d);
+  block_relevant_dofs[0] = locally_relevant_dofs.get_view(0, n_u);
+  block_relevant_dofs[1] = locally_relevant_dofs.get_view(n_u, n_u + n_p);
+  block_relevant_dofs[2] =
+    locally_relevant_dofs.get_view(n_u + n_p, n_u + n_p + n_d);
+  pcout << "  Number of DoFs: " << std::endl;
+  pcout << "    velocity = " << n_u << std::endl;
+  pcout << "    pressure = " << n_p << std::endl;
+  pcout << "    displacement = " << n_d << std::endl;
+  pcout << "    total    = " << n_u + n_p + n_d << std::endl;
+  locally_relevant_solution.reinit(block_owned_dofs,
+                                   block_relevant_dofs,
                                    MPI_COMM_WORLD);
-  system_rhs.reinit(locally_owned_dofs, MPI_COMM_WORLD);
+
   pcout << "Locally owned" << std::endl;
   std::cout << locally_relevant_dofs.n_elements() << " locally relevant dofs."
             << mpi_rank << std::endl;
@@ -158,8 +179,13 @@ FluidStructureProblem::setup_dofs()
   // In the rest of this function we create a sparsity pattern as discussed
   // extensively in the introduction, and use it to initialize the matrix;
   // then also set vectors to their correct sizes:
-
-  DynamicSparsityPattern dsp(locally_relevant_dofs);
+#ifdef FORCE_USE_OF_TRILINOS
+  TrilinosWrappers::BlockSparsityPattern dsp(block_owned_dofs,block_owned_dofs,block_relevant_dofs,MPI_COMM_WORLD);
+#endif
+  // for (unsigned int i = 0; i < fe_collection.n_blocks(); ++i)
+  //   for (unsigned int j = 0; j < fe_collection.n_blocks(); ++j)
+  //     dsp.block(i, j).reinit(dofs_per_block[i], dofs_per_block[j]);
+  // dsp.collect_sizes();
 
   Table<2, DoFTools::Coupling> cell_coupling(fe_collection.n_components(),
                                              fe_collection.n_components());
@@ -176,22 +202,23 @@ FluidStructureProblem::setup_dofs()
         if ((c >= dim + 1) && (d < dim + 1))
           face_coupling[c][d] = DoFTools::always;
       }
-  constraints.condense(dsp);
+  // constraints.condense(dsp);
   DoFTools::make_flux_sparsity_pattern(dof_handler,
                                        dsp,
+                                       constraints,
+                                       true,
                                        cell_coupling,
-                                       face_coupling);
-  SparsityTools::distribute_sparsity_pattern(dsp,
-                                             dof_handler.locally_owned_dofs(),
-                                             MPI_COMM_WORLD,
-                                             locally_relevant_dofs);
+                                       face_coupling,
+                                      mpi_rank);
+  // SparsityTools::distribute_sparsity_pattern(dsp,
+  //                                            locally_owned_dofs,
+  //                                            MPI_COMM_WORLD,
+  //                                            locally_relevant_dofs);
 
   dsp.compress(); // useless ? not present in step 40
 
-  system_matrix.reinit(locally_owned_dofs,
-                       locally_owned_dofs,
-                       dsp,
-                       MPI_COMM_WORLD);
+  system_matrix.reinit(dsp);
+  system_rhs.reinit(block_owned_dofs, MPI_COMM_WORLD);
 }
 
 void
@@ -499,7 +526,7 @@ FluidStructureProblem::assemble_interface_term(
   std::vector<double>                  &stokes_phi_p,
   FullMatrix<double>                   &local_interface_matrix) const
 {
-  pcout << "Assembling interface term..." << std::endl;
+  // pcout << "Assembling interface term..." << std::endl;
   Assert(stokes_fe_face_values.n_quadrature_points ==
            elasticity_fe_face_values.n_quadrature_points,
          ExcInternalError());
@@ -533,7 +560,7 @@ FluidStructureProblem::assemble_interface_term(
                stokes_phi_p[j] * normal_vector) *
               elasticity_phi[i] * stokes_fe_face_values.JxW(q));
     }
-  pcout << "Assembly of interface term done!" << std::endl;
+  // pcout << "Assembly of interface term done!" << std::endl;
 }
 #ifdef DEBUG
 void
@@ -563,45 +590,50 @@ FluidStructureProblem::output_matrix() const
   VecView(system_rhs, vec_viewer);
   PetscViewerPopFormat(vec_viewer);
   PetscViewerDestroy(&vec_viewer);
-#  endif
+#endif
 }
 #endif
-void
-FluidStructureProblem::solve()
-{
-  pcout << "solvingthissutff" << std::endl;
-  LA::MPI::Vector completely_distributed_solution(locally_owned_dofs,
-                                                  MPI_COMM_WORLD);
-#ifdef FORCE_USE_OF_TRILINOS
-  SolverControl                  solver_control(1, 0);
-  TrilinosWrappers::SolverDirect direct(solver_control);
-  direct.solve(system_matrix, completely_distributed_solution, system_rhs);
-#else
-  SolverControl                    cn;
-  PETScWrappers::SparseDirectMUMPS solver(cn, MPI_COMM_WORLD);
-  solver.set_symmetric_mode(false);
-  solver.solve(system_matrix, completely_distributed_solution, system_rhs);
-
-#endif
-  constraints.distribute(completely_distributed_solution);
-  locally_relevant_solution = completely_distributed_solution;
-}
+// void
+// FluidStructureProblem::solve()
+// {
+//   pcout << "solvingthissutff" << std::endl;
+//   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
+//                                                   MPI_COMM_WORLD);
+// #ifdef FORCE_USE_OF_TRILINOS
+//   SolverControl                  solver_control(1, 0);
+//   TrilinosWrappers::SolverDirect direct(solver_control);
+//   direct.solve(system_matrix, completely_distributed_solution, system_rhs);
+// #else
+//   SolverControl                    cn;
+//   PETScWrappers::SparseDirectMUMPS solver(cn, MPI_COMM_WORLD);
+//   solver.set_symmetric_mode(false);
+//   solver.solve(system_matrix, completely_distributed_solution, system_rhs);
+// #endif
+//   constraints.distribute(completely_distributed_solution);
+//   locally_relevant_solution = completely_distributed_solution;
+// }
 
 void
 FluidStructureProblem::solve_iterative()
 {
   pcout << "solvingthissutff iterative" << std::endl;
-  LA::MPI::Vector completely_distributed_solution(locally_owned_dofs,
+  LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
                                                   MPI_COMM_WORLD);
-  SolverControl   solver_control(100000, 1e-6 * system_rhs.l2_norm());
+  SolverControl   solver_control(1000000, 1e-6 * system_rhs.l2_norm());
 #ifdef FORCE_USE_OF_TRILINOS
-  LA::MPI::PreconditionILU preconditioner;
-  preconditioner.initialize(system_matrix);
-  SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
+  BlockILUPreconditioner preconditioner;
+  TrilinosWrappers::PreconditionILU::AdditionalData data;
+  data.ilu_fill = 1; // Fill-in factor (higher = more accurate but slower)
+  data.ilu_atol = 0.01; // Drop tolerance
+  data.ilu_rtol = 1.01;
+  data.overlap   = 0;    // Set to 1 or 2 for better parallel consistency
+  preconditioner.initialize(system_matrix,data);
+  SolverGMRES<TrilinosWrappers::MPI::BlockVector> solver(solver_control);
   solver.solve(system_matrix,
                completely_distributed_solution,
-               system_rhs,
-               preconditioner);
+               system_rhs
+               ,preconditioner
+              );
   pcout << "  " << solver_control.last_step() << " GMRES iterations"
         << std::endl;
 #else

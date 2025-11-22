@@ -39,13 +39,13 @@
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/sparsity_tools.h>
 #include <deal.II/lac/trilinos_block_sparse_matrix.h>
 #include <deal.II/lac/trilinos_parallel_block_vector.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_solver.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
 #include <deal.II/lac/vector.h>
-#include <deal.II/lac/sparsity_tools.h>
 
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
@@ -115,8 +115,8 @@ public:
   setup_dofs();
   void
   assemble_system();
-  void
-  solve();
+  // void
+  // solve();
   void
   solve_iterative();
   void
@@ -162,6 +162,63 @@ public:
       for (unsigned int c = 0; c < this->n_components; ++c)
         values(c) = StokesBoundaryValues::value(p, c);
     }
+  };
+  class BlockILUPreconditioner
+  {
+  public:
+    BlockILUPreconditioner() = default;
+
+    void
+    initialize(
+      const TrilinosWrappers::BlockSparseMatrix               &matrix,
+      const TrilinosWrappers::PreconditionILU::AdditionalData &additional_data =
+        TrilinosWrappers::PreconditionILU::AdditionalData())
+    {
+      // 1. Resize the vector of preconditioners to match the number of blocks
+      preconditioners.resize(matrix.n_block_rows());
+
+      // 2. Initialize an ILU preconditioner for each diagonal block
+      for (unsigned int i = 0; i < matrix.n_block_rows(); ++i)
+        {
+          preconditioners[i] =
+            std::make_shared<TrilinosWrappers::PreconditionILU>();
+
+          // Initialize with the specific sub-matrix (A_00, A_11, etc.)
+          preconditioners[i]->initialize(matrix.block(i, i), additional_data);
+        }
+    }
+
+    void
+    vmult(TrilinosWrappers::MPI::BlockVector       &dst,
+          const TrilinosWrappers::MPI::BlockVector &src) const
+    {
+      // Apply the local ILU preconditioners to each vector block independently
+      for (unsigned int i = 0; i < preconditioners.size(); ++i)
+        {
+          // dst_i = ILU(A_ii)^-1 * src_i
+          preconditioners[i]->vmult(dst.block(i), src.block(i));
+        }
+    }
+
+  private:
+    std::vector<std::shared_ptr<TrilinosWrappers::PreconditionILU>>
+      preconditioners;
+  };
+
+
+  class PreconditionIdentityi
+  {
+  public:
+    // Application of the preconditioner: we just copy the input vector (src)
+    // into the output vector (dst).
+    void
+    vmult(TrilinosWrappers::MPI::BlockVector       &dst,
+          const TrilinosWrappers::MPI::BlockVector &src) const
+    {
+      dst = src;
+    }
+
+  protected:
   };
 
 private:
@@ -223,13 +280,15 @@ private:
   AffineConstraints<double> constraints;
 
   SparsityPattern       sparsity_pattern;
-  LA::MPI::SparseMatrix system_matrix;
-  LA::MPI::Vector       solution;
-  LA::MPI::Vector       locally_relevant_solution;
-  LA::MPI::Vector       system_rhs;
+  LA::MPI::BlockSparseMatrix system_matrix;
+  LA::MPI::BlockVector       solution;
+  LA::MPI::BlockVector       locally_relevant_solution;
+  LA::MPI::BlockVector       system_rhs;
 
-  IndexSet locally_owned_dofs;
-  IndexSet locally_relevant_dofs;
+  IndexSet              locally_owned_dofs;
+  IndexSet              locally_relevant_dofs;
+  std::vector<IndexSet> block_owned_dofs;
+  std::vector<IndexSet> block_relevant_dofs;
 };
 
 #endif
