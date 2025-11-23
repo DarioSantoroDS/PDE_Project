@@ -163,63 +163,8 @@ public:
         values(c) = StokesBoundaryValues::value(p, c);
     }
   };
-  class BlockILUPreconditioner
-  {
-  public:
-    BlockILUPreconditioner() = default;
-
-    void
-    initialize(
-      const TrilinosWrappers::BlockSparseMatrix               &matrix,
-      const TrilinosWrappers::PreconditionILU::AdditionalData &additional_data =
-        TrilinosWrappers::PreconditionILU::AdditionalData())
-    {
-      // 1. Resize the vector of preconditioners to match the number of blocks
-      preconditioners.resize(matrix.n_block_rows());
-
-      // 2. Initialize an ILU preconditioner for each diagonal block
-      for (unsigned int i = 0; i < matrix.n_block_rows(); ++i)
-        {
-          preconditioners[i] =
-            std::make_shared<TrilinosWrappers::PreconditionILU>();
-
-          // Initialize with the specific sub-matrix (A_00, A_11, etc.)
-          preconditioners[i]->initialize(matrix.block(i, i), additional_data);
-        }
-    }
-
-    void
-    vmult(TrilinosWrappers::MPI::BlockVector       &dst,
-          const TrilinosWrappers::MPI::BlockVector &src) const
-    {
-      // Apply the local ILU preconditioners to each vector block independently
-      for (unsigned int i = 0; i < preconditioners.size(); ++i)
-        {
-          // dst_i = ILU(A_ii)^-1 * src_i
-          preconditioners[i]->vmult(dst.block(i), src.block(i));
-        }
-    }
-
-  private:
-    std::vector<std::shared_ptr<TrilinosWrappers::PreconditionILU>>
-      preconditioners;
-  };
 
 
-  class PreconditionIdentityi
-  {
-  public:
-    // Application of the preconditioner: we just copy the input vector (src)
-    // into the output vector (dst).
-    void
-    vmult(TrilinosWrappers::MPI::BlockVector       &dst,
-          const TrilinosWrappers::MPI::BlockVector &src) const
-    {
-      dst = src;
-    }
-
-  protected:
-  };
 
   class PreconditionBlockTriangular
   {
@@ -227,13 +172,14 @@ public:
     // Initialize the preconditioner, given the velocity stiffness matrix, the
     // pressure mass matrix.
     void
-    initialize(const LA::MPI::SparseMatrix &velocity_stiffness_, // A(0,0)
-               const LA::MPI::SparseMatrix &pressure_mass_, // pressurematrix(1,1)
-               const LA::MPI::SparseMatrix &B_, // A(1,0)
-               const LA::MPI::SparseMatrix &D1_, // A(2,0)
-               const LA::MPI::SparseMatrix &D2_,  // A(2,1)
-               const LA::MPI::SparseMatrix &solid_matrix_ // A(2,2)
-    )                  
+    initialize(
+      const LA::MPI::SparseMatrix &velocity_stiffness_, // A(0,0)
+      const LA::MPI::SparseMatrix &pressure_mass_,      // pressurematrix(1,1)
+      const LA::MPI::SparseMatrix &B_,                  // A(1,0)
+      const LA::MPI::SparseMatrix &D1_,                 // A(2,0)
+      const LA::MPI::SparseMatrix &D2_,                 // A(2,1)
+      const LA::MPI::SparseMatrix &solid_matrix_        // A(2,2)
+    )
     {
       velocity_stiffness = &velocity_stiffness_;
       pressure_mass      = &pressure_mass_;
@@ -244,11 +190,13 @@ public:
 
       preconditioner_velocity.initialize(velocity_stiffness_);
       preconditioner_pressure.initialize(pressure_mass_);
-      preconditioner_solid.initialize(solid_matrix_,
-                                     TrilinosWrappers::PreconditionSSOR::
-                                       AdditionalData(1.0
-                                        , 1 //added by copilot
-                                      ));
+      preconditioner_solid.initialize(
+        solid_matrix_
+        // , TrilinosWrappers::PreconditionSSOR::
+        //    AdditionalData(1.0
+        //     // , 1 //i dont think is useful this
+        // )
+      );
     }
 
     // Application of the preconditioner.
@@ -256,7 +204,7 @@ public:
     vmult(TrilinosWrappers::MPI::BlockVector       &dst,
           const TrilinosWrappers::MPI::BlockVector &src) const
     {
-      SolverControl                           solver_control_velocity(1000, 
+      SolverControl                           solver_control_velocity(1000,
                                             1e-2 * src.block(0).l2_norm());
       SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_velocity(
         solver_control_velocity);
@@ -283,10 +231,16 @@ public:
       D2->vmult_add(tmpSolid, dst.block(1));
       tmpSolid.sadd(-1.0, src.block(2));
 
-      SolverControl                           solver_control_solid(1000,
-                                            1e-2 * src.block(2).l2_norm());
+      SolverControl solver_control_solid(100000, 1e-16
+                                         // * src.block(2).l2_norm()
+      );
+      SolverGMRES<TrilinosWrappers::MPI::Vector> solver_cg_solid(
+        solver_control_solid);
 
-      preconditioner_solid.vmult(dst.block(2), tmpSolid);
+      solver_cg_solid.solve(*solid_matrix,
+                            dst.block(2),
+                            tmpSolid,
+                            preconditioner_solid);
     }
 
   protected:
@@ -312,7 +266,7 @@ public:
     const LA::MPI::SparseMatrix *D2;
 
     // Preconditioner used for the pressure block.
-    TrilinosWrappers::PreconditionSSOR preconditioner_solid;
+    TrilinosWrappers::PreconditionILU preconditioner_solid;
 
     // Solid matrix.
     const LA::MPI::SparseMatrix *solid_matrix;
@@ -357,6 +311,7 @@ private:
   const unsigned int stokes_degree;
   const unsigned int elasticity_degree;
   // Number of MPI processes.
+  // parallel::fullydistributed::Triangulation<dim> triangulation; doesn't work
   parallel::distributed::Triangulation<dim> triangulation;
 
 
@@ -374,7 +329,7 @@ private:
   DoFHandler<dim>       dof_handler;
   const double          viscosity;
   const double          lambda;
-  const double          mu; 
+  const double          mu;
 
 public:
   ConditionalOStream pcout;
@@ -382,7 +337,7 @@ public:
 private:
   AffineConstraints<double> constraints;
 
-  SparsityPattern       sparsity_pattern;
+  SparsityPattern            sparsity_pattern;
   LA::MPI::BlockSparseMatrix system_matrix;
   LA::MPI::BlockSparseMatrix pressure_mass;
   LA::MPI::BlockVector       solution;

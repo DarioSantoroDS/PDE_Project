@@ -23,6 +23,8 @@ FluidStructureProblem::make_grid()
         cell->set_material_id(solid_domain_id);
     }
   pcout << "Mesh generated!" << std::endl;
+  pcout << "  Number of elements = " << triangulation.n_global_active_cells()
+        << std::endl;
 }
 
 void
@@ -248,9 +250,9 @@ void
 FluidStructureProblem::assemble_system()
 {
   pcout << "Assembling the system..." << mpi_rank << std::endl;
-  system_matrix = 0;
-  system_rhs    = 0;
-  pressure_mass = 0;
+  system_matrix = 0.0;
+  system_rhs    = 0.0;
+  pressure_mass = 0.0;
 
   const QGauss<dim> stokes_quadrature(stokes_degree + 2);
   const QGauss<dim> elasticity_quadrature(elasticity_degree + 2);
@@ -384,7 +386,8 @@ FluidStructureProblem::assemble_system()
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
                   cell_pressure_mass_matrix(i, j) +=
                     fe_values[pressure].value(i, q) *
-                    fe_values[pressure].value(j, q) * fe_values.JxW(q);
+                    fe_values[pressure].value(j, q) / viscosity *
+                    fe_values.JxW(q);
             }
         }
       else
@@ -661,7 +664,7 @@ FluidStructureProblem::solve_iterative()
   pcout << "solvingthissutff iterative" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
                                                        MPI_COMM_WORLD);
-  SolverControl        solver_control(1000000, 1e-6 * system_rhs.l2_norm());
+  SolverControl        solver_control(1000000, 1e-16 * system_rhs.l2_norm());
 #ifdef FORCE_USE_OF_TRILINOS
 
   PreconditionBlockTriangular preconditioner;
@@ -728,6 +731,17 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
   for (unsigned int i = 0; i < subdomain.size(); ++i)
     subdomain(i) = triangulation.locally_owned_subdomain();
   data_out.add_data_vector(subdomain, "subdomain");
+
+  Vector<float> material(triangulation.n_active_cells());
+  unsigned int  i = 0;
+  for (const auto &cell : triangulation.active_cell_iterators())
+    {
+      material(i) = static_cast<float>(cell->material_id());
+      ++i;
+    }
+  data_out.add_data_vector(material,
+                           "material_id",
+                           DataOut<dim>::type_cell_data);
 
   data_out.build_patches();
 
