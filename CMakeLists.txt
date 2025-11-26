@@ -51,5 +51,5 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfloat-conversion -Wmissing-braces -Wno
 add_executable(progetto progetto.cpp FluidStructureProblem.cpp)
 deal_ii_setup_target(progetto)
 
-# add_executable(originale originaleFSI.cpp)
-# deal_ii_setup_target(originale)
+add_executable(originale originale.cpp)
+deal_ii_setup_target(originale)
