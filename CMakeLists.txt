@@ -15,9 +15,22 @@ if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
   add_definitions(-DBUILD_TYPE_DEBUG)
 endif()
 
+add_custom_target(debug
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+  COMMENT "Switch CMAKE_BUILD_TYPE to Debug"
+  )
+
+add_custom_target(release
+  COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Release ${CMAKE_SOURCE_DIR}
+  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+  COMMENT "Switch CMAKE_BUILD_TYPE to Release"
+  )
+
+
 # Locate MPI compiler.
 find_package(MPI REQUIRED)
-set(CMAKE_CXX_COMPILER "${MPI_CXX_COMPILER}")
+# set(CMAKE_CXX_COMPILER "${MPI_CXX_COMPILER}")
 
 # Locate Boost.
 find_package(Boost 1.72.0 REQUIRED
@@ -33,7 +46,7 @@ find_package(deal.II 9.3.1 REQUIRED
 deal_ii_initialize_cached_variables()
 
 # Add useful compiler flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfloat-conversion -Wmissing-braces -Wnon-virtual-dtor")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfloat-conversion -Wmissing-braces -Wnon-virtual-dtor -Wall")
 
 add_executable(progetto progetto.cpp FluidStructureProblem.cpp)
 deal_ii_setup_target(progetto)
