@@ -4,7 +4,7 @@ void
 FluidStructureProblem::make_grid()
 {
   pcout << "Generating the mesh..." << std::endl;
-  GridGenerator::subdivided_hyper_cube(triangulation, 8, -1, 1);
+  GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
 
   for (const auto &cell : triangulation.active_cell_iterators())
     {
@@ -181,12 +181,13 @@ FluidStructureProblem::setup_dofs()
   // In the rest of this function we create a sparsity pattern as discussed
   // extensively in the introduction, and use it to initialize the matrix;
   // then also set vectors to their correct sizes:
-#ifdef FORCE_USE_OF_TRILINOS
+#ifdef FORCE_USE_OF_TRILINOS  
+#ifndef ALTERNATIVEPATTERN
   TrilinosWrappers::BlockSparsityPattern dsp(block_owned_dofs,
                                              block_owned_dofs,
                                              block_relevant_dofs,
                                              MPI_COMM_WORLD);
-#endif
+// #endif
   // for (unsigned int i = 0; i < fe_collection.n_blocks(); ++i)
   //   for (unsigned int j = 0; j < fe_collection.n_blocks(); ++j)
   //     dsp.block(i, j).reinit(dofs_per_block[i], dofs_per_block[j]);
@@ -242,8 +243,108 @@ FluidStructureProblem::setup_dofs()
   DoFTools::make_sparsity_pattern(dof_handler,
                                   coupling_pressure,
                                   sparsity_pressure_mass);
-  sparsity_pressure_mass.compress();
-  pressure_mass.reinit(sparsity_pressure_mass);
+#endif
+#endif
+#ifdef ALTERNATIVEPATTERN
+  BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
+
+  Table<2, DoFTools::Coupling> cell_coupling(fe_collection.n_components(),
+                                             fe_collection.n_components());
+  Table<2, DoFTools::Coupling> face_coupling(fe_collection.n_components(),
+                                             fe_collection.n_components());
+
+  for (unsigned int c = 0; c < fe_collection.n_components(); ++c)
+    for (unsigned int d = 0; d < fe_collection.n_components(); ++d)
+      {
+        if (((c < dim + 1) && (d < dim + 1) && !((c == dim) && (d == dim))) ||
+            ((c >= dim + 1) && (d >= dim + 1)))
+          cell_coupling[c][d] = DoFTools::always;
+
+        if ((c >= dim + 1) && (d < dim + 1))
+          face_coupling[c][d] = DoFTools::always;
+      }
+
+  DoFTools::make_flux_sparsity_pattern(dof_handler,
+                                       dsp,
+                                       constraints,
+                                       true,
+                                       cell_coupling,
+                                       face_coupling,
+                                       mpi_rank);
+  SparsityTools::distribute_sparsity_pattern(dsp,
+                                             locally_owned_dofs,
+                                             MPI_COMM_WORLD,
+                                             locally_relevant_dofs);
+
+
+  constraints.condense(dsp);
+
+  dsp.compress(); // useless ? not present in step 40
+  system_matrix.reinit(block_owned_dofs, dsp, MPI_COMM_WORLD);
+  system_rhs.reinit(block_owned_dofs, MPI_COMM_WORLD);
+
+  // Table<2, DoFTools::Coupling> coupling_pressure(fe_collection.n_components(),
+  //                                                fe_collection.n_components());
+
+  // for (unsigned int c = 0; c < dim + 1; ++c)
+  //   {
+  //     for (unsigned int d = 0; d < dim + 1; ++d)
+  //       {
+  //         if (c == dim && d == dim) // pressure-pressure term
+  //           coupling_pressure[c][d] = DoFTools::always;
+  //         else // other combinations
+  //           coupling_pressure[c][d] = DoFTools::none;
+  //       }
+  //   }
+  // TrilinosWrappers::BlockSparsityPattern sparsity_pressure_mass(
+  //   block_owned_dofs, MPI_COMM_WORLD);
+  // DoFTools::make_sparsity_pattern(dof_handler,
+  //                                 coupling_pressure,
+  //                                 sparsity_pressure_mass);
+  // sparsity_pressure_mass.compress();
+  // pressure_mass.reinit(sparsity_pressure_mass);
+  // ... (Your first block remains unchanged) ...
+
+  // 1. Setup the specific coupling for the pressure mass matrix
+  Table<2, DoFTools::Coupling> coupling_pressure(fe_collection.n_components(),
+                                                 fe_collection.n_components());
+
+  for (unsigned int c = 0; c < dim + 1; ++c)
+    {
+      for (unsigned int d = 0; d < dim + 1; ++d)
+        {
+          if (c == dim && d == dim) // pressure-pressure term only
+            coupling_pressure[c][d] = DoFTools::always;
+          else
+            coupling_pressure[c][d] = DoFTools::none;
+        }
+    }
+
+  // 2. Initialize a separate Dynamic Sparsity Pattern
+  BlockDynamicSparsityPattern dsp_pressure(dofs_per_block, dofs_per_block);
+
+  // 3. Create the pattern logic (similar to make_flux_sparsity_pattern but for
+  // standard mass)
+  DoFTools::make_sparsity_pattern(
+    dof_handler,
+    coupling_pressure,
+    dsp_pressure,
+    constraints,
+    false); // false = do not keep constrained dofs
+
+  // 4. Distribute the pattern across MPI processes
+  // This is the crucial step that matches your first block's logic
+  SparsityTools::distribute_sparsity_pattern(dsp_pressure,
+                                             locally_owned_dofs,
+                                             MPI_COMM_WORLD,
+                                             locally_relevant_dofs);
+
+  // 5. Condense constraints (hanging nodes, Dirichlet)
+  constraints.condense(dsp_pressure);
+
+  // 6. Initialize the actual Trilinos matrix using the computed pattern
+  pressure_mass.reinit(block_owned_dofs, dsp_pressure, MPI_COMM_WORLD);
+#endif
 }
 
 void
@@ -386,7 +487,7 @@ FluidStructureProblem::assemble_system()
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
                   cell_pressure_mass_matrix(i, j) +=
                     fe_values[pressure].value(i, q) *
-                    fe_values[pressure].value(j, q) / viscosity *
+                    fe_values[pressure].value(j, q) / (2 * viscosity) *
                     fe_values.JxW(q);
             }
         }
@@ -664,7 +765,7 @@ FluidStructureProblem::solve_iterative()
   pcout << "solvingthissutff iterative" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
                                                        MPI_COMM_WORLD);
-  SolverControl        solver_control(1000000, 1e-16 * system_rhs.l2_norm());
+  SolverControl        solver_control(100000, 1e-6 * system_rhs.l2_norm());
 #ifdef FORCE_USE_OF_TRILINOS
 
   PreconditionBlockTriangular preconditioner;
@@ -674,7 +775,7 @@ FluidStructureProblem::solve_iterative()
                             system_matrix.block(2, 0),
                             system_matrix.block(2, 1),
                             system_matrix.block(2, 2));
-  SolverGMRES<TrilinosWrappers::MPI::BlockVector> solver(solver_control);
+  SolverFGMRES<TrilinosWrappers::MPI::BlockVector> solver(solver_control);
   solver.solve(system_matrix,
                completely_distributed_solution,
                system_rhs,

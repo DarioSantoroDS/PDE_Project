@@ -15,7 +15,8 @@ int main(int argc, char* argv[])
 #else
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
 #endif
-    FluidStructureProblem flow_problem(1, 1);
+        int ziopera = std::stoi(argv[1]);
+    FluidStructureProblem flow_problem(1, 1,ziopera);
         flow_problem.make_grid();
         flow_problem.setup_dofs();
 

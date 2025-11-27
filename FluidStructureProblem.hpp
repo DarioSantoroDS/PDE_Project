@@ -55,7 +55,7 @@
 #include <petscviewer.h> // Essential for the viewer commands
 
 #define FORCE_USE_OF_TRILINOS
-
+#define ALTERNATIVEPATTERN
 
 #include <fstream>
 #include <iostream>
@@ -79,12 +79,14 @@ using namespace dealii;
 class FluidStructureProblem
 {
 public:
-  static constexpr unsigned int dim = 3;
+  static constexpr unsigned int dim = 2;
 
   FluidStructureProblem(const unsigned int stokes_degree,
-                        const unsigned int elasticity_degree)
+                        const unsigned int elasticity_degree,
+                      const int problemsize)
     : stokes_degree(stokes_degree)
     , elasticity_degree(elasticity_degree)
+    , problemsize(problemsize)
     , triangulation(MPI_COMM_WORLD, Triangulation<dim>::maximum_smoothing)
     , stokes_fe(FE_Q<dim>(stokes_degree + 1),
                 dim,
@@ -191,11 +193,12 @@ public:
       preconditioner_velocity.initialize(velocity_stiffness_);
       preconditioner_pressure.initialize(pressure_mass_);
       preconditioner_solid.initialize(
-        solid_matrix_,
-        TrilinosWrappers::PreconditionSSOR::AdditionalData(
-          1.0
-          // , 1 //i dont think is useful this
-          ));
+        solid_matrix_
+        // , TrilinosWrappers::PreconditionSSOR::AdditionalData(
+        //   1.0
+        //   // , 1 //i dont think is useful this
+        //   )
+        );
     }
 
     // Application of the preconditioner.
@@ -204,7 +207,7 @@ public:
           const TrilinosWrappers::MPI::BlockVector &src) const
     {
       SolverControl                           solver_control_velocity(1000,
-                                            1e-2 * src.block(0).l2_norm());
+                                            1e-3 * src.block(0).l2_norm());
       SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_velocity(
         solver_control_velocity);
       solver_cg_velocity.solve(*velocity_stiffness,
@@ -217,7 +220,7 @@ public:
       tmpStokes.sadd(-1.0, src.block(1));
 
       SolverControl                           solver_control_pressure(1000,
-                                            1e-2 * src.block(1).l2_norm());
+                                            1e-3 * src.block(1).l2_norm());
       SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_pressure(
         solver_control_pressure);
       solver_cg_pressure.solve(*pressure_mass,
@@ -225,14 +228,18 @@ public:
                                tmpStokes,
                                preconditioner_pressure);
 
-      tmpSolid.reinit(src.block(2));
-      D1->vmult(tmpSolid, dst.block(0));
-      D2->vmult_add(tmpSolid, dst.block(1));
-      tmpSolid.sadd(-1.0, src.block(2));
+      tmpStokes.reinit(src.block(2));
+      D1->vmult(tmpStokes, dst.block(0));
+      D2->vmult_add(tmpStokes, dst.block(1));
+      tmpStokes.sadd(-1.0, src.block(2));
+
+
+      
+      // preconditioner_solid.vmult(dst.block(2), tmpStokes);
 
       if (src.block(2).l2_norm() < 1e-50)
         {
-          SolverControl solver_control_solid(1000, 1e-16
+          SolverControl solver_control_solid(1000, 1e-3
                                              //  * src.block(2).l2_norm()
           );
           SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_solid(
@@ -240,19 +247,19 @@ public:
 
           solver_cg_solid.solve(*solid_matrix,
                                 dst.block(2),
-                                tmpSolid,
+                                tmpStokes,
                                 preconditioner_solid);
         }
       else
         {
-          SolverControl solver_control_solid(100000,
-                                             1e-2 * src.block(2).l2_norm());
+          SolverControl solver_control_solid(1000,
+                                             1e-3 * src.block(2).l2_norm());
           SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_solid(
             solver_control_solid);
 
           solver_cg_solid.solve(*solid_matrix,
                                 dst.block(2),
-                                tmpSolid,
+                                tmpStokes,
                                 preconditioner_solid);
         }
     }
@@ -279,7 +286,7 @@ public:
       const LA::MPI::SparseMatrix *D2;
 
       // Preconditioner used for the pressure block.
-      TrilinosWrappers::PreconditionSSOR preconditioner_solid;
+      TrilinosWrappers::PreconditionAMG preconditioner_solid;
 
       // Solid matrix.
       const LA::MPI::SparseMatrix *solid_matrix;
@@ -287,8 +294,8 @@ public:
       // Temporary vector stokes
       mutable LA::MPI::Vector tmpStokes;
 
-      // Temporary vector solid
-      mutable LA::MPI::Vector tmpSolid;
+      // // Temporary vector solid
+      // mutable LA::MPI::Vector tmpStokes;
     };
 
   private:
@@ -323,6 +330,7 @@ public:
 
     const unsigned int stokes_degree;
     const unsigned int elasticity_degree;
+    const int          problemsize;
     // Number of MPI processes.
     // parallel::fullydistributed::Triangulation<dim> triangulation; doesn't
     // work
@@ -351,7 +359,7 @@ public:
   private:
     AffineConstraints<double> constraints;
 
-    // SparsityPattern            sparsity_pattern;
+    SparsityPattern            sparsity_pattern;
     LA::MPI::BlockSparseMatrix system_matrix;
     LA::MPI::BlockSparseMatrix pressure_mass;
     LA::MPI::BlockVector       solution;
