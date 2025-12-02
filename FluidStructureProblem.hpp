@@ -55,10 +55,16 @@
 #include <petscviewer.h> // Essential for the viewer commands
 
 #define FORCE_USE_OF_TRILINOS
-
+#define ALTERNATIVE_PATTERN
+#define ITERATIVE_SOLVER
+// #define DIRECT_SOLVER
 
 #include <fstream>
 #include <iostream>
+
+#if !defined(ITERATIVE_SOLVER) && !defined(DIRECT_SOLVER)
+#error Either ITERATIVE_SOLVER or DIRECT_SOLVER must be defined.
+#endif
 
 namespace LA
 {
@@ -79,12 +85,14 @@ using namespace dealii;
 class FluidStructureProblem
 {
 public:
-  static constexpr unsigned int dim = 3;
+  static constexpr unsigned int dim = 2;
 
   FluidStructureProblem(const unsigned int stokes_degree,
-                        const unsigned int elasticity_degree)
+                        const unsigned int elasticity_degree,
+                        const int          problemsize)
     : stokes_degree(stokes_degree)
     , elasticity_degree(elasticity_degree)
+    , problemsize(problemsize)
     , triangulation(MPI_COMM_WORLD, Triangulation<dim>::maximum_smoothing)
     , stokes_fe(FE_Q<dim>(stokes_degree + 1),
                 dim,
@@ -115,10 +123,14 @@ public:
   setup_dofs();
   void
   assemble_system();
-  // void
-  // solve();
+#ifdef DIRECT_SOLVER
+  void
+  solve();
+#endif
+#ifdef ITERATIVE_SOLVER
   void
   solve_iterative();
+#endif
   void
   output_results(const unsigned int refinement_cycle) const;
 #ifdef DEBUG
@@ -191,11 +203,12 @@ public:
       preconditioner_velocity.initialize(velocity_stiffness_);
       preconditioner_pressure.initialize(pressure_mass_);
       preconditioner_solid.initialize(
-        solid_matrix_,
-        TrilinosWrappers::PreconditionSSOR::AdditionalData(
-          1.0
-          // , 1 //i dont think is useful this
-          ));
+        solid_matrix_
+        // , TrilinosWrappers::PreconditionSSOR::AdditionalData(
+        //   1.0
+        //   // , 1 //i dont think is useful this
+        //   )
+      );
     }
 
     // Application of the preconditioner.
@@ -211,6 +224,8 @@ public:
                                dst.block(0),
                                src.block(0),
                                preconditioner_velocity);
+      std::cout << "  " << solver_control_velocity.last_step()
+                << " CG1 iterations";
 
       tmpStokes.reinit(src.block(1));
       B->vmult(tmpStokes, dst.block(0));
@@ -224,15 +239,21 @@ public:
                                dst.block(1),
                                tmpStokes,
                                preconditioner_pressure);
+      std::cout << "  " << solver_control_pressure.last_step()
+                << " CG2 iterations";
 
-      tmpSolid.reinit(src.block(2));
-      D1->vmult(tmpSolid, dst.block(0));
-      D2->vmult_add(tmpSolid, dst.block(1));
-      tmpSolid.sadd(-1.0, src.block(2));
+      tmpStokes.reinit(src.block(2));
+      D1->vmult(tmpStokes, dst.block(0));
+      D2->vmult_add(tmpStokes, dst.block(1));
+      tmpStokes.sadd(-1.0, src.block(2));
+
+
+
+      // preconditioner_solid.vmult(dst.block(2), tmpStokes);
 
       if (src.block(2).l2_norm() < 1e-50)
         {
-          SolverControl solver_control_solid(1000, 1e-16
+          SolverControl solver_control_solid(1000, 1e-2
                                              //  * src.block(2).l2_norm()
           );
           SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_solid(
@@ -240,128 +261,134 @@ public:
 
           solver_cg_solid.solve(*solid_matrix,
                                 dst.block(2),
-                                tmpSolid,
+                                tmpStokes,
                                 preconditioner_solid);
+          std::cout << "  " << solver_control_pressure.last_step()
+                    << " CG3 iterations";
         }
       else
         {
-          SolverControl solver_control_solid(100000,
+          SolverControl                           solver_control_solid(1000,
                                              1e-2 * src.block(2).l2_norm());
           SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_solid(
             solver_control_solid);
 
           solver_cg_solid.solve(*solid_matrix,
                                 dst.block(2),
-                                tmpSolid,
+                                tmpStokes,
                                 preconditioner_solid);
+          std::cout << "  " << solver_control_pressure.last_step()
+                    << " CG3 iterations";
         }
     }
-    protected:
-      // Velocity stiffness matrix.
-      const LA::MPI::SparseMatrix *velocity_stiffness;
 
-      // Preconditioner used for the velocity block.
-      TrilinosWrappers::PreconditionILU preconditioner_velocity;
+  protected:
+    // Velocity stiffness matrix.
+    const LA::MPI::SparseMatrix *velocity_stiffness;
 
-      // Pressure mass matrix.
-      const LA::MPI::SparseMatrix *pressure_mass;
+    // Preconditioner used for the velocity block.
+    TrilinosWrappers::PreconditionAMG preconditioner_velocity;
 
-      // Preconditioner used for the pressure block.
-      TrilinosWrappers::PreconditionILU preconditioner_pressure;
+    // Pressure mass matrix.
+    const LA::MPI::SparseMatrix *pressure_mass;
 
-      // B matrix.
-      const LA::MPI::SparseMatrix *B;
+    // Preconditioner used for the pressure block.
+    TrilinosWrappers::PreconditionAMG preconditioner_pressure;
 
-      // D1 matrix.
-      const LA::MPI::SparseMatrix *D1;
+    // B matrix.
+    const LA::MPI::SparseMatrix *B;
 
-      // D2 matrix.
-      const LA::MPI::SparseMatrix *D2;
+    // D1 matrix.
+    const LA::MPI::SparseMatrix *D1;
 
-      // Preconditioner used for the pressure block.
-      TrilinosWrappers::PreconditionSSOR preconditioner_solid;
+    // D2 matrix.
+    const LA::MPI::SparseMatrix *D2;
 
-      // Solid matrix.
-      const LA::MPI::SparseMatrix *solid_matrix;
+    // Preconditioner used for the pressure block.
+    TrilinosWrappers::PreconditionAMG preconditioner_solid;
 
-      // Temporary vector stokes
-      mutable LA::MPI::Vector tmpStokes;
+    // Solid matrix.
+    const LA::MPI::SparseMatrix *solid_matrix;
 
-      // Temporary vector solid
-      mutable LA::MPI::Vector tmpSolid;
-    };
+    // Temporary vector stokes
+    mutable LA::MPI::Vector tmpStokes;
 
-  private:
-    enum
-    {
-      fluid_domain_id,
-      solid_domain_id
-    };
-
-    static bool
-    cell_is_in_fluid_domain(const typename DoFHandler<dim>::cell_iterator &cell)
-    {
-      return (cell->material_id() == fluid_domain_id);
-    }
-
-    static bool
-    cell_is_in_solid_domain(const typename DoFHandler<dim>::cell_iterator &cell)
-    {
-      return (cell->material_id() == solid_domain_id);
-    }
-
-    void
-    set_active_fe_indices();
-    void
-    assemble_interface_term(
-      const FEFaceValuesBase<dim>          &elasticity_fe_face_values,
-      const FEFaceValuesBase<dim>          &stokes_fe_face_values,
-      std::vector<Tensor<1, dim>>          &elasticity_phi,
-      std::vector<SymmetricTensor<2, dim>> &stokes_symgrad_phi_u,
-      std::vector<double>                  &stokes_phi_p,
-      FullMatrix<double>                   &local_interface_matrix) const;
-
-    const unsigned int stokes_degree;
-    const unsigned int elasticity_degree;
-    // Number of MPI processes.
-    // parallel::fullydistributed::Triangulation<dim> triangulation; doesn't
-    // work
-    parallel::distributed::Triangulation<dim> triangulation;
-
-
-    FESystem<dim>      stokes_fe;
-    const unsigned int mpi_size;
-
-    // This MPI process.
-    const unsigned int mpi_rank;
-
-    // MPI_Comm           mpi_communicator;
-
-
-    FESystem<dim>         elasticity_fe;
-    hp::FECollection<dim> fe_collection;
-    DoFHandler<dim>       dof_handler;
-    const double          viscosity;
-    const double          lambda;
-    const double          mu;
-
-  public:
-    ConditionalOStream pcout;
-
-  private:
-    AffineConstraints<double> constraints;
-
-    // SparsityPattern            sparsity_pattern;
-    LA::MPI::BlockSparseMatrix system_matrix;
-    LA::MPI::BlockSparseMatrix pressure_mass;
-    LA::MPI::BlockVector       solution;
-    LA::MPI::BlockVector       locally_relevant_solution;
-    LA::MPI::BlockVector       system_rhs;
-
-    IndexSet              locally_owned_dofs;
-    IndexSet              locally_relevant_dofs;
-    std::vector<IndexSet> block_owned_dofs;
-    std::vector<IndexSet> block_relevant_dofs;
+    // // Temporary vector solid
+    // mutable LA::MPI::Vector tmpStokes;
   };
+
+private:
+  enum
+  {
+    fluid_domain_id,
+    solid_domain_id
+  };
+
+  static bool
+  cell_is_in_fluid_domain(const typename DoFHandler<dim>::cell_iterator &cell)
+  {
+    return (cell->material_id() == fluid_domain_id);
+  }
+
+  static bool
+  cell_is_in_solid_domain(const typename DoFHandler<dim>::cell_iterator &cell)
+  {
+    return (cell->material_id() == solid_domain_id);
+  }
+
+  void
+  set_active_fe_indices();
+  void
+  assemble_interface_term(
+    const FEFaceValuesBase<dim>          &elasticity_fe_face_values,
+    const FEFaceValuesBase<dim>          &stokes_fe_face_values,
+    std::vector<Tensor<1, dim>>          &elasticity_phi,
+    std::vector<SymmetricTensor<2, dim>> &stokes_symgrad_phi_u,
+    std::vector<double>                  &stokes_phi_p,
+    FullMatrix<double>                   &local_interface_matrix) const;
+
+  const unsigned int stokes_degree;
+  const unsigned int elasticity_degree;
+  const int          problemsize;
+  // Number of MPI processes.
+  // parallel::fullydistributed::Triangulation<dim> triangulation; doesn't
+  // work
+  parallel::distributed::Triangulation<dim> triangulation;
+
+
+  FESystem<dim>      stokes_fe;
+  const unsigned int mpi_size;
+
+  // This MPI process.
+  const unsigned int mpi_rank;
+
+  // MPI_Comm           mpi_communicator;
+
+
+  FESystem<dim>         elasticity_fe;
+  hp::FECollection<dim> fe_collection;
+  DoFHandler<dim>       dof_handler;
+  const double          viscosity;
+  const double          lambda;
+  const double          mu;
+
+public:
+  ConditionalOStream pcout;
+
+private:
+  AffineConstraints<double> constraints;
+
+  SparsityPattern            sparsity_pattern;
+  LA::MPI::BlockSparseMatrix system_matrix;
+  LA::MPI::BlockSparseMatrix pressure_mass;
+  LA::MPI::BlockVector       solution;
+  LA::MPI::BlockVector       locally_relevant_solution;
+  LA::MPI::BlockVector       system_rhs;
+
+  IndexSet              locally_owned_dofs;
+  IndexSet              locally_relevant_dofs;
+  std::vector<IndexSet> block_owned_dofs;
+  std::vector<IndexSet> block_relevant_dofs;
+};
 
 #endif

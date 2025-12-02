@@ -48,8 +48,8 @@ deal_ii_initialize_cached_variables()
 # Add useful compiler flags.
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wfloat-conversion -Wmissing-braces -Wnon-virtual-dtor -Wall")
 
-add_executable(progetto progetto.cpp FluidStructureProblem.cpp)
-deal_ii_setup_target(progetto)
+add_executable(fsi fsi.cpp FluidStructureProblem.cpp)
+deal_ii_setup_target(fsi)
 
-add_executable(originale originale.cpp)
-deal_ii_setup_target(originale)
+add_executable(original46 original46.cpp)
+deal_ii_setup_target(original46)
