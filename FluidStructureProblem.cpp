@@ -168,9 +168,9 @@ FluidStructureProblem::setup_dofs()
   // locally_test = Utilities::MPI::all_gather(MPI_COMM_WORLD,
   // locally_owned_dofs); IndexSet active_test;
   // DoFTools::extract_locally_active_dofs(dof_handler,active_test);
-  // bool pippo =
+  // bool is_this_consistent =
   // constraints.is_consistent_in_parallel(locally_test,active_test,MPI_COMM_WORLD,true);
-  // std::cout<< pippo << std::endl;
+  // std::cout<< is_this_consistent << std::endl;
   constraints.close();
 
   pcout << "   Number of active cells: " << triangulation.n_active_cells()
@@ -182,7 +182,7 @@ FluidStructureProblem::setup_dofs()
   // extensively in the introduction, and use it to initialize the matrix;
   // then also set vectors to their correct sizes:
 #ifdef FORCE_USE_OF_TRILINOS  
-#ifndef ALTERNATIVEPATTERN
+#ifndef ALTERNATIVE_PATTERN
   TrilinosWrappers::BlockSparsityPattern dsp(block_owned_dofs,
                                              block_owned_dofs,
                                              block_relevant_dofs,
@@ -245,7 +245,7 @@ FluidStructureProblem::setup_dofs()
                                   sparsity_pressure_mass);
 #endif
 #endif
-#ifdef ALTERNATIVEPATTERN
+#ifdef ALTERNATIVE_PATTERN
   BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
   Table<2, DoFTools::Coupling> cell_coupling(fe_collection.n_components(),
@@ -283,29 +283,6 @@ FluidStructureProblem::setup_dofs()
   system_matrix.reinit(block_owned_dofs, dsp, MPI_COMM_WORLD);
   system_rhs.reinit(block_owned_dofs, MPI_COMM_WORLD);
 
-  // Table<2, DoFTools::Coupling> coupling_pressure(fe_collection.n_components(),
-  //                                                fe_collection.n_components());
-
-  // for (unsigned int c = 0; c < dim + 1; ++c)
-  //   {
-  //     for (unsigned int d = 0; d < dim + 1; ++d)
-  //       {
-  //         if (c == dim && d == dim) // pressure-pressure term
-  //           coupling_pressure[c][d] = DoFTools::always;
-  //         else // other combinations
-  //           coupling_pressure[c][d] = DoFTools::none;
-  //       }
-  //   }
-  // TrilinosWrappers::BlockSparsityPattern sparsity_pressure_mass(
-  //   block_owned_dofs, MPI_COMM_WORLD);
-  // DoFTools::make_sparsity_pattern(dof_handler,
-  //                                 coupling_pressure,
-  //                                 sparsity_pressure_mass);
-  // sparsity_pressure_mass.compress();
-  // pressure_mass.reinit(sparsity_pressure_mass);
-  // ... (Your first block remains unchanged) ...
-
-  // 1. Setup the specific coupling for the pressure mass matrix
   Table<2, DoFTools::Coupling> coupling_pressure(fe_collection.n_components(),
                                                  fe_collection.n_components());
 
@@ -320,29 +297,21 @@ FluidStructureProblem::setup_dofs()
         }
     }
 
-  // 2. Initialize a separate Dynamic Sparsity Pattern
   BlockDynamicSparsityPattern dsp_pressure(dofs_per_block, dofs_per_block);
 
-  // 3. Create the pattern logic (similar to make_flux_sparsity_pattern but for
-  // standard mass)
   DoFTools::make_sparsity_pattern(
     dof_handler,
     coupling_pressure,
     dsp_pressure,
     constraints,
-    false); // false = do not keep constrained dofs
+    false); // false = do not keep constrained dofs, not sure about this
 
-  // 4. Distribute the pattern across MPI processes
-  // This is the crucial step that matches your first block's logic
   SparsityTools::distribute_sparsity_pattern(dsp_pressure,
                                              locally_owned_dofs,
                                              MPI_COMM_WORLD,
                                              locally_relevant_dofs);
 
-  // 5. Condense constraints (hanging nodes, Dirichlet)
   constraints.condense(dsp_pressure);
-
-  // 6. Initialize the actual Trilinos matrix using the computed pattern
   pressure_mass.reinit(block_owned_dofs, dsp_pressure, MPI_COMM_WORLD);
 #endif
 }
@@ -487,7 +456,7 @@ FluidStructureProblem::assemble_system()
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
                   cell_pressure_mass_matrix(i, j) +=
                     fe_values[pressure].value(i, q) *
-                    fe_values[pressure].value(j, q) / (2 * viscosity) *
+                    fe_values[pressure].value(j, q) / viscosity *
                     fe_values.JxW(q);
             }
         }
@@ -739,26 +708,30 @@ FluidStructureProblem::output_matrix() const
 #  endif
 }
 #endif
-// void
-// FluidStructureProblem::solve()
-// {
-//   pcout << "solvingthissutff" << std::endl;
-//   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
-//                                                   MPI_COMM_WORLD);
-// #ifdef FORCE_USE_OF_TRILINOS
-//   SolverControl                  solver_control(1, 0);
-//   TrilinosWrappers::SolverDirect direct(solver_control);
-//   direct.solve(system_matrix, completely_distributed_solution, system_rhs);
-// #else
-//   SolverControl                    cn;
-//   PETScWrappers::SparseDirectMUMPS solver(cn, MPI_COMM_WORLD);
-//   solver.set_symmetric_mode(false);
-//   solver.solve(system_matrix, completely_distributed_solution, system_rhs);
-// #endif
-//   constraints.distribute(completely_distributed_solution);
-//   locally_relevant_solution = completely_distributed_solution;
-// }
 
+#ifdef DIRECT_SOLVER
+void
+FluidStructureProblem::solve()
+{
+  pcout << "solvingthissutff" << std::endl;
+  LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
+                                                  MPI_COMM_WORLD);
+#ifdef FORCE_USE_OF_TRILINOS
+  SolverControl                  solver_control(1, 0);
+  TrilinosWrappers::SolverDirect direct(solver_control);
+  direct.solve(system_matrix, completely_distributed_solution, system_rhs);
+#else
+  SolverControl                    cn;
+  PETScWrappers::SparseDirectMUMPS solver(cn, MPI_COMM_WORLD);
+  solver.set_symmetric_mode(false);
+  solver.solve(system_matrix, completely_distributed_solution, system_rhs);
+#endif
+  constraints.distribute(completely_distributed_solution);
+  locally_relevant_solution = completely_distributed_solution;
+}
+#endif
+
+#ifdef ITERATIVE_SOLVER
 void
 FluidStructureProblem::solve_iterative()
 {
@@ -801,6 +774,7 @@ FluidStructureProblem::solve_iterative()
   constraints.distribute(completely_distributed_solution);
   locally_relevant_solution = completely_distributed_solution;
 }
+#endif
 
 void
 FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
