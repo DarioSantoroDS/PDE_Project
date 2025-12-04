@@ -181,13 +181,13 @@ FluidStructureProblem::setup_dofs()
   // In the rest of this function we create a sparsity pattern as discussed
   // extensively in the introduction, and use it to initialize the matrix;
   // then also set vectors to their correct sizes:
-#ifdef FORCE_USE_OF_TRILINOS  
-#ifndef ALTERNATIVE_PATTERN
+#ifdef FORCE_USE_OF_TRILINOS
+#  ifndef ALTERNATIVE_PATTERN
   TrilinosWrappers::BlockSparsityPattern dsp(block_owned_dofs,
                                              block_owned_dofs,
                                              block_relevant_dofs,
                                              MPI_COMM_WORLD);
-// #endif
+  // #endif
   // for (unsigned int i = 0; i < fe_collection.n_blocks(); ++i)
   //   for (unsigned int j = 0; j < fe_collection.n_blocks(); ++j)
   //     dsp.block(i, j).reinit(dofs_per_block[i], dofs_per_block[j]);
@@ -243,7 +243,7 @@ FluidStructureProblem::setup_dofs()
   DoFTools::make_sparsity_pattern(dof_handler,
                                   coupling_pressure,
                                   sparsity_pressure_mass);
-#endif
+#  endif
 #endif
 #ifdef ALTERNATIVE_PATTERN
   BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
@@ -715,17 +715,17 @@ FluidStructureProblem::solve()
 {
   pcout << "solvingthissutff" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
-                                                  MPI_COMM_WORLD);
-#ifdef FORCE_USE_OF_TRILINOS
+                                                       MPI_COMM_WORLD);
+#  ifdef FORCE_USE_OF_TRILINOS
   SolverControl                  solver_control(1, 0);
   TrilinosWrappers::SolverDirect direct(solver_control);
   direct.solve(system_matrix, completely_distributed_solution, system_rhs);
-#else
+#  else
   SolverControl                    cn;
   PETScWrappers::SparseDirectMUMPS solver(cn, MPI_COMM_WORLD);
   solver.set_symmetric_mode(false);
   solver.solve(system_matrix, completely_distributed_solution, system_rhs);
-#endif
+#  endif
   constraints.distribute(completely_distributed_solution);
   locally_relevant_solution = completely_distributed_solution;
 }
@@ -738,8 +738,9 @@ FluidStructureProblem::solve_iterative()
   pcout << "solvingthissutff iterative" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
                                                        MPI_COMM_WORLD);
-  SolverControl        solver_control(100000, 1e-6 * system_rhs.l2_norm());
-#ifdef FORCE_USE_OF_TRILINOS
+  // completely_distributed_solution = 1.0;
+  SolverControl solver_control(100000, 1e-6 * system_rhs.l2_norm());
+#  ifdef FORCE_USE_OF_TRILINOS
 
   PreconditionBlockTriangular preconditioner;
   preconditioner.initialize(system_matrix.block(0, 0),
@@ -755,7 +756,7 @@ FluidStructureProblem::solve_iterative()
                preconditioner);
   pcout << "  " << solver_control.last_step() << " GMRES iterations"
         << std::endl;
-#else
+#  else
   Assert(false, ExcNotImplemented());
 
   // // PETScWrappers::PreconditionBlockJacobi::AdditionalData data;
@@ -770,7 +771,7 @@ FluidStructureProblem::solve_iterative()
   //              preconditioner);
   // pcout << "  " << solver_control.last_step() << " GMRES iterations"
   //       << std::endl;
-#endif
+#  endif
   constraints.distribute(completely_distributed_solution);
   locally_relevant_solution = completely_distributed_solution;
 }
