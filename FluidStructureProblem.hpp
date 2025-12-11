@@ -224,8 +224,8 @@ public:
                                dst.block(0),
                                src.block(0),
                                preconditioner_velocity);
-      pcout << "  " << solver_control_velocity.last_step() << " CG1 iterations"
-            << std::endl;
+      // std::cout << "  " << solver_control_velocity.last_step() << " CG1 iterations"
+      //       << std::endl;
 
       tmpStokes.reinit(src.block(1));
       B->vmult(tmpStokes, dst.block(0));
@@ -238,8 +238,8 @@ public:
                                dst.block(1),
                                tmpStokes,
                                preconditioner_pressure);
-      pcout << "  " << solver_control_pressure.last_step() << " CG2 iterations"
-            << std::endl;
+      // std::cout << "  " << solver_control_pressure.last_step() << " CG2 iterations"
+      //       << std::endl;
 
       tmpStokes.reinit(src.block(2));
       D1->vmult(tmpStokes, dst.block(0));
@@ -258,8 +258,8 @@ public:
                             dst.block(2),
                             tmpStokes,
                             preconditioner_solid);
-      pcout << "  " << solver_control_solid.last_step() << " CG3 iterations"
-            << std::endl;
+      // std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
+      //       << std::endl;
     }
 
   protected:
