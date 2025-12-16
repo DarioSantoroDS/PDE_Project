@@ -1,0 +1,9 @@
+subsection Geometry
+  set Number of cells per edge        = 8
+  set Fluid weight        = 200
+  set Solid weight        = 10
+end
+
+# subsection Refinement
+#  set Refinement cycles = 5
+# end

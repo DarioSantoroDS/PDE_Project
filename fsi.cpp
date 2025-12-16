@@ -9,14 +9,18 @@ int main(int argc, char* argv[])
 {
     // try
     // {
+
+
 #ifdef DEBUG
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv,1);
     std::cout << "im in debug mode" << std::endl;
 #else
     Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
 #endif
-        int ziopera = std::stoi(argv[1]);
-    FluidStructureProblem flow_problem(1, 1,ziopera);
+    ParameterHandler prm;
+    ParameterReader  param(prm);
+    param.read_parameters("config.prm");
+    FluidStructureProblem flow_problem(1, 1,prm);
         flow_problem.make_grid();
         flow_problem.setup_dofs();
 

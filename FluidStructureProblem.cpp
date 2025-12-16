@@ -1,9 +1,56 @@
 #include "FluidStructureProblem.hpp"
 
+ParameterReader::ParameterReader(ParameterHandler &paramhandler)
+  : prm(paramhandler)
+{}
+
+
+void
+ParameterReader::declare_parameters()
+{
+  prm.enter_subsection("Geometry");
+  {
+    prm.declare_entry("Number of cells per edge",
+                      "8",                 // Default value in file
+                      Patterns::Integer(1), 
+                      "The number of cells per edge of the domain");
+    prm.declare_entry("Fluid weight",
+                      "1",                 // Default is same for 
+                      Patterns::Integer(1), 
+                      "Weight given to the fluid cell");
+    prm.declare_entry("Solid weight",
+                      "1",                 // Default is same for 
+                      Patterns::Integer(1), 
+                      "Weight given to the solid cell");
+                    }
+  prm.leave_subsection();
+  // prm.enter_subsection("Refinement");
+  // {
+  //   prm.declare_entry("Refinement cycles",
+  //                     "1",                 // Default value in file
+  //                     Patterns::Integer(1), 
+  //                     "Number of refinement cycles to be performed");
+  // }
+  // prm.leave_subsection();
+}
+
+void
+ParameterReader::read_parameters(const std::string &parameter_file)
+{
+  declare_parameters();
+  prm.parse_input(parameter_file);
+}
+
 void
 FluidStructureProblem::make_grid()
 {
   pcout << "Generating the mesh..." << std::endl;
+    prm.enter_subsection("Geometry");
+  const int problemsize =
+    prm.get_integer("Number of cells per edge");
+  const int fluid_weight = prm.get_integer("Fluid weight");
+    const int solid_weight = prm.get_integer("Solid weight");
+  prm.leave_subsection();
   GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
 
   for (const auto &cell : triangulation.active_cell_iterators())
@@ -22,6 +69,28 @@ FluidStructureProblem::make_grid()
       else
         cell->set_material_id(solid_domain_id);
     }
+
+  triangulation.signals.cell_weight.connect(
+    [&](const typename parallel::distributed::Triangulation<dim>::cell_iterator
+          &cell,
+        const typename parallel::distributed::Triangulation<dim>::CellStatus
+          status) -> unsigned int {
+      // If the cell is in the fluid domain, make it "heavy".
+      // This forces the partitioner to put FEWER fluid cells on a process.
+      if (cell->material_id() == fluid_domain_id)
+        {
+          // Adjust this ratio based on actual cost (e.g., 5x, 10x expensive)
+          return fluid_weight;
+        }
+      else
+        {
+          // Solid cells are "light", so a process can handle many of them.
+          return solid_weight;
+        }
+    });
+
+  // 4. Force a repartition now that weights and IDs are defined
+  triangulation.repartition();
   pcout << "Mesh generated!" << std::endl;
   pcout << "  Number of elements = " << triangulation.n_global_active_cells()
         << std::endl;

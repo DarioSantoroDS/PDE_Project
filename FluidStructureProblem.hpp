@@ -5,6 +5,7 @@
 #include <deal.II/base/function.h>
 #include <deal.II/base/index_set.h>
 #include <deal.II/base/logstream.h>
+#include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/utilities.h>
 
@@ -82,6 +83,20 @@ namespace LA
 
 using namespace dealii;
 
+class ParameterReader : public Subscriptor
+{
+public:
+  ParameterReader(ParameterHandler &);
+  void
+  read_parameters(const std::string &);
+
+private:
+  void
+                    declare_parameters();
+  ParameterHandler &prm;
+};
+
+
 class FluidStructureProblem
 {
 public:
@@ -89,10 +104,10 @@ public:
 
   FluidStructureProblem(const unsigned int stokes_degree,
                         const unsigned int elasticity_degree,
-                        const int          problemsize)
+                        ParameterHandler  &param)
     : stokes_degree(stokes_degree)
     , elasticity_degree(elasticity_degree)
-    , problemsize(problemsize)
+    , prm(param)
     , triangulation(MPI_COMM_WORLD, Triangulation<dim>::maximum_smoothing)
     , stokes_fe(FE_Q<dim>(stokes_degree + 1),
                 dim,
@@ -224,7 +239,8 @@ public:
                                dst.block(0),
                                src.block(0),
                                preconditioner_velocity);
-      // std::cout << "  " << solver_control_velocity.last_step() << " CG1 iterations"
+      // std::cout << "  " << solver_control_velocity.last_step() << " CG1
+      // iterations"
       //       << std::endl;
 
       tmpStokes.reinit(src.block(1));
@@ -238,7 +254,8 @@ public:
                                dst.block(1),
                                tmpStokes,
                                preconditioner_pressure);
-      // std::cout << "  " << solver_control_pressure.last_step() << " CG2 iterations"
+      // std::cout << "  " << solver_control_pressure.last_step() << " CG2
+      // iterations"
       //       << std::endl;
 
       tmpStokes.reinit(src.block(2));
@@ -258,7 +275,8 @@ public:
                             dst.block(2),
                             tmpStokes,
                             preconditioner_solid);
-      // std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
+      // std::cout << "  " << solver_control_solid.last_step() << " CG3
+      // iterations"
       //       << std::endl;
     }
 
@@ -461,10 +479,10 @@ private:
     std::vector<SymmetricTensor<2, dim>> &stokes_symgrad_phi_u,
     std::vector<double>                  &stokes_phi_p,
     FullMatrix<double>                   &local_interface_matrix) const;
-
   const unsigned int stokes_degree;
   const unsigned int elasticity_degree;
-  const int          problemsize;
+  ParameterHandler  &prm;
+
   // Number of MPI processes.
   // parallel::fullydistributed::Triangulation<dim> triangulation; doesn't
   // work
