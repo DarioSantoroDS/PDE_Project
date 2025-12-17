@@ -24,14 +24,14 @@ ParameterReader::declare_parameters()
                       "Weight given to the solid cell");
                     }
   prm.leave_subsection();
-  // prm.enter_subsection("Refinement");
-  // {
-  //   prm.declare_entry("Refinement cycles",
-  //                     "1",                 // Default value in file
-  //                     Patterns::Integer(1), 
-  //                     "Number of refinement cycles to be performed");
-  // }
-  // prm.leave_subsection();
+  prm.enter_subsection("Refinement");
+  {
+    prm.declare_entry("Refinement cycles",
+                      "1",                 // Default value in file
+                      Patterns::Integer(1), 
+                      "Number of refinement cycles to be performed");
+  }
+  prm.leave_subsection();
 }
 
 void
@@ -70,27 +70,27 @@ FluidStructureProblem::make_grid()
         cell->set_material_id(solid_domain_id);
     }
 
-  triangulation.signals.cell_weight.connect(
-    [&](const typename parallel::distributed::Triangulation<dim>::cell_iterator
-          &cell,
-        const typename parallel::distributed::Triangulation<dim>::CellStatus
-          status) -> unsigned int {
-      // If the cell is in the fluid domain, make it "heavy".
-      // This forces the partitioner to put FEWER fluid cells on a process.
-      if (cell->material_id() == fluid_domain_id)
-        {
-          // Adjust this ratio based on actual cost (e.g., 5x, 10x expensive)
-          return fluid_weight;
-        }
-      else
-        {
-          // Solid cells are "light", so a process can handle many of them.
-          return solid_weight;
-        }
-    });
+  // triangulation.signals.cell_weight.connect(
+  //   [&](const typename parallel::distributed::Triangulation<dim>::cell_iterator
+  //         &cell,
+  //       const typename parallel::distributed::Triangulation<dim>::CellStatus
+  //         status) -> unsigned int {
+  //     // If the cell is in the fluid domain, make it "heavy".
+  //     // This forces the partitioner to put FEWER fluid cells on a process.
+  //     if (cell->material_id() == fluid_domain_id)
+  //       {
+  //         // Adjust this ratio based on actual cost (e.g., 5x, 10x expensive)
+  //         return fluid_weight;
+  //       }
+  //     else
+  //       {
+  //         // Solid cells are "light", so a process can handle many of them.
+  //         return solid_weight;
+  //       }
+  //   });
 
-  // 4. Force a repartition now that weights and IDs are defined
-  triangulation.repartition();
+  // // 4. Force a repartition now that weights and IDs are defined
+  // triangulation.repartition();
   pcout << "Mesh generated!" << std::endl;
   pcout << "  Number of elements = " << triangulation.n_global_active_cells()
         << std::endl;
@@ -102,8 +102,8 @@ FluidStructureProblem::set_active_fe_indices()
   pcout << "Setting active fe indeces.." << std::endl;
   for (const auto &cell : dof_handler.active_cell_iterators())
     {
-      if (!cell->is_locally_owned())
-        continue;
+      // if (!cell->is_locally_owned())
+      //   continue;
       if (cell_is_in_fluid_domain(cell))
         cell->set_active_fe_index(0);
       else if (cell_is_in_solid_domain(cell))
@@ -179,7 +179,6 @@ FluidStructureProblem::setup_dofs()
     Functions::ZeroFunction<dim>(dim + 1 + dim),
     constraints,
     fe_collection.component_mask(displacements));
-
   // There are more constraints we have to handle, though: we have to make
   // sure that the velocity is zero at the interface between fluid and
   // solid. The following piece of code was already presented in the
@@ -281,7 +280,7 @@ FluidStructureProblem::setup_dofs()
   DoFTools::make_flux_sparsity_pattern(dof_handler,
                                        dsp,
                                        constraints,
-                                       true,
+                                       false,
                                        cell_coupling,
                                        face_coupling,
                                        mpi_rank);
@@ -312,9 +311,14 @@ FluidStructureProblem::setup_dofs()
   DoFTools::make_sparsity_pattern(dof_handler,
                                   coupling_pressure,
                                   sparsity_pressure_mass);
+  sparsity_pressure_mass.compress(); // useless ? not present in step 40
+
+  pressure_mass.reinit(sparsity_pressure_mass);
 #  endif
 #endif
 #ifdef ALTERNATIVE_PATTERN
+    system_matrix.clear();
+    pressure_mass.clear();
   BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
   Table<2, DoFTools::Coupling> cell_coupling(fe_collection.n_components(),
@@ -336,7 +340,7 @@ FluidStructureProblem::setup_dofs()
   DoFTools::make_flux_sparsity_pattern(dof_handler,
                                        dsp,
                                        constraints,
-                                       true,
+                                       false,
                                        cell_coupling,
                                        face_coupling,
                                        mpi_rank);
@@ -347,6 +351,7 @@ FluidStructureProblem::setup_dofs()
 
 
   constraints.condense(dsp);
+  // dsp.collect_sizes();
 
   dsp.compress(); // useless ? not present in step 40
   system_matrix.reinit(block_owned_dofs, dsp, MPI_COMM_WORLD);
@@ -367,19 +372,24 @@ FluidStructureProblem::setup_dofs()
     }
 
   BlockDynamicSparsityPattern dsp_pressure(dofs_per_block, dofs_per_block);
+  // DoFTools::make_flux_sparsity_pattern(dof_handler,
+  //                                      dsp,
+  //                                     //  constraints,
+  //                                     //  false,
+  //                                      cell_coupling,
+  //                                      face_coupling,
+  //                                      mpi_rank);
 
-  DoFTools::make_sparsity_pattern(
-    dof_handler,
-    coupling_pressure,
-    dsp_pressure,
-    constraints,
-    false); // false = do not keep constrained dofs, not sure about this
+  DoFTools::make_sparsity_pattern(dof_handler, coupling_pressure, dsp_pressure);
+  // constraints,
+  // false); // false = do not keep constrained dofs, not sure about this
 
   SparsityTools::distribute_sparsity_pattern(dsp_pressure,
                                              locally_owned_dofs,
                                              MPI_COMM_WORLD,
                                              locally_relevant_dofs);
-
+  // dsp_pressure.collect_sizes();
+  // dsp_pressure.compress();
   constraints.condense(dsp_pressure);
   pressure_mass.reinit(block_owned_dofs, dsp_pressure, MPI_COMM_WORLD);
 #endif
@@ -467,7 +477,6 @@ FluidStructureProblem::assemble_system()
     {
       if (!cell->is_locally_owned())
         continue;
-
       hp_fe_values.reinit(cell);
 
       const FEValues<dim> &fe_values = hp_fe_values.get_present_fe_values();
@@ -483,7 +492,6 @@ FluidStructureProblem::assemble_system()
 
       cell_pressure_mass_matrix.reinit(cell->get_fe().n_dofs_per_cell(),
                                        cell->get_fe().n_dofs_per_cell());
-
       // With all of this done, we continue to assemble the cell terms for
       // cells that are part of the Stokes and elastic regions. While we
       // could in principle do this in one formula, in effect implementing
@@ -557,7 +565,6 @@ FluidStructureProblem::assemble_system()
                   }
             }
         }
-
       // Once we have the contributions from cell integrals, we copy them
       // into the global matrix (taking care of constraints right away,
       // through the AffineConstraints::distribute_local_to_global
@@ -692,8 +699,10 @@ FluidStructureProblem::assemble_system()
                                                          system_matrix);
                 }
             }
+
       pressure_mass.add(dof_indices, cell_pressure_mass_matrix);
     }
+
   system_matrix.compress(VectorOperation::add);
   system_rhs.compress(VectorOperation::add);
   pressure_mass.compress(VectorOperation::add);
@@ -894,110 +903,160 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
     "./", "solution", refinement_cycle, MPI_COMM_WORLD, 2, 8);
   pcout << "   Written solution_" << refinement_cycle << ".pvtu" << std::endl;
 }
-// void FluidStructureProblem::refine_mesh()
-// {
-//     Vector<float> stokes_estimated_error_per_cell(
-//         triangulation.n_active_cells());
-//     Vector<float> elasticity_estimated_error_per_cell(
-//         triangulation.n_active_cells());
+void FluidStructureProblem::refine_mesh()
+{
+    pcout << "Refining mesh..." << std::endl;
+    Vector<float> stokes_estimated_error_per_cell(
+        triangulation.n_active_cells());
+    Vector<float> elasticity_estimated_error_per_cell(
+        triangulation.n_active_cells());
 
-//     const QGauss<dim - 1> stokes_face_quadrature(stokes_degree + 2);
-//     const QGauss<dim - 1> elasticity_face_quadrature(elasticity_degree + 2);
+    const QGauss<dim - 1> stokes_face_quadrature(stokes_degree + 2);
+    const QGauss<dim - 1> elasticity_face_quadrature(elasticity_degree + 2);
 
-//     hp::QCollection<dim - 1> face_q_collection;
-//     face_q_collection.push_back(stokes_face_quadrature);
-//     face_q_collection.push_back(elasticity_face_quadrature);
+    hp::QCollection<dim - 1> face_q_collection;
+    face_q_collection.push_back(stokes_face_quadrature);
+    face_q_collection.push_back(elasticity_face_quadrature);
 
-//     const FEValuesExtractors::Vector velocities(0);
-//     KellyErrorEstimator<dim>::estimate(
-//         dof_handler,
-//         face_q_collection,
-//         std::map<types::boundary_id, const Function<dim> *>(),
-//         locally_relevant_solution,
-//         stokes_estimated_error_per_cell,
-//         fe_collection.component_mask(velocities));
+    const FEValuesExtractors::Vector velocities(0);
+    KellyErrorEstimator<dim>::estimate(
+      dof_handler,
+      face_q_collection,
+      std::map<types::boundary_id, const Function<dim> *>(),
+      locally_relevant_solution,
+      stokes_estimated_error_per_cell,
+      fe_collection.component_mask(velocities));
+    //   nullptr,
+    // 0,
+    // triangulation.locally_owned_subdomain());
 
-//     const FEValuesExtractors::Vector displacements(dim + 1);
-//     KellyErrorEstimator<dim>::estimate(
-//         dof_handler,
-//         face_q_collection,
-//         std::map<types::boundary_id, const Function<dim> *>(),
-//         locally_relevant_solution,
-//         elasticity_estimated_error_per_cell,
-//         fe_collection.component_mask(displacements));
+    const FEValuesExtractors::Vector displacements(dim + 1);
+    KellyErrorEstimator<dim>::estimate(
+        dof_handler,
+        face_q_collection,
+        std::map<types::boundary_id, const Function<dim> *>(),
+        locally_relevant_solution,
+        elasticity_estimated_error_per_cell,
+        fe_collection.component_mask(displacements));
+    //   nullptr,
+    // 0,
+    // triangulation.locally_owned_subdomain());
 
-//     // We then normalize error estimates by dividing by their norm and scale
-//     // the fluid error indicators by a factor of 4 as discussed in the
-//     // introduction. The results are then added together into a vector that
-//     // contains error indicators for all cells:
-//     stokes_estimated_error_per_cell *=
-//         4. / stokes_estimated_error_per_cell.l2_norm();
-//     elasticity_estimated_error_per_cell *=
-//         1. / elasticity_estimated_error_per_cell.l2_norm();
+    // const FEValuesExtractors::Vector velocities(0);
+    // KellyErrorEstimator<dim>::estimate(
+    //   dof_handler,
+    //   face_q_collection,
+    //   std::map<types::boundary_id, const Function<dim> *>(),
+    //   solution,
+    //   stokes_estimated_error_per_cell,
+    //   fe_collection.component_mask(velocities));
 
-//     Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
+    // const FEValuesExtractors::Vector displacements(dim + 1);
+    // KellyErrorEstimator<dim>::estimate(
+    //   dof_handler,
+    //   face_q_collection,
+    //   std::map<types::boundary_id, const Function<dim> *>(),
+    //   solution,
+    //   elasticity_estimated_error_per_cell,
+    //   fe_collection.component_mask(displacements));
 
-//     estimated_error_per_cell += stokes_estimated_error_per_cell;
-//     estimated_error_per_cell += elasticity_estimated_error_per_cell;
 
-//     // The second to last part of the function, before actually refining the
-//     // mesh, involves a heuristic that we have already mentioned in the
-//     // introduction: because the solution is discontinuous, the
-//     // KellyErrorEstimator class gets all confused about cells that sit at
-//     the
-//     // boundary between subdomains: it believes that the error is large there
-//     // because the jump in the gradient is large, even though this is
-//     entirely
-//     // expected and a feature that is in fact present in the exact solution
-//     as
-//     // well and therefore not indicative of any numerical error.
-//     //
-//     // Consequently, we set the error indicators to zero for all cells at the
-//     // interface; the conditions determining which cells this affects are
-//     // slightly awkward because we have to account for the possibility of
-//     // adaptively refined meshes, meaning that the neighboring cell can be
-//     // coarser than the current one, or could in fact be refined some
-//     // more. The structure of these nested conditions is much the same as we
-//     // encountered when assembling interface terms in
-//     // <code>assemble_system</code>.
-//     for (const auto &cell : dof_handler.active_cell_iterators())
-//     {
-//         if (!cell->is_locally_owned())
-//             continue;
+    // We then normalize error estimates by dividing by their norm and scale
+    // the fluid error indicators by a factor of 4 as discussed in the
+    // introduction. The results are then added together into a vector that
+    // contains error indicators for all cells:
+    // TODO Commented because of l2 norm may not work corectly 
+    stokes_estimated_error_per_cell *=
+        4. / stokes_estimated_error_per_cell.l2_norm();
+    elasticity_estimated_error_per_cell *=
+        1. / elasticity_estimated_error_per_cell.l2_norm();
 
-//         for (const auto f : cell->face_indices())
-//             if (cell_is_in_solid_domain(cell))
-//             {
-//                 if ((cell->at_boundary(f) == false) &&
-//                     (((cell->neighbor(f)->level() == cell->level()) &&
-//                       (cell->neighbor(f)->has_children() == false) &&
-//                       cell_is_in_fluid_domain(cell->neighbor(f))) ||
-//                      ((cell->neighbor(f)->level() == cell->level()) &&
-//                       (cell->neighbor(f)->has_children() == true) &&
-//                       (cell_is_in_fluid_domain(
-//                           cell->neighbor_child_on_subface(f, 0)))) ||
-//                      (cell->neighbor_is_coarser(f) &&
-//                       cell_is_in_fluid_domain(cell->neighbor(f)))))
-//                     estimated_error_per_cell(cell->active_cell_index()) = 0;
-//             }
-//             else
-//             {
-//                 if ((cell->at_boundary(f) == false) &&
-//                     (((cell->neighbor(f)->level() == cell->level()) &&
-//                       (cell->neighbor(f)->has_children() == false) &&
-//                       cell_is_in_solid_domain(cell->neighbor(f))) ||
-//                      ((cell->neighbor(f)->level() == cell->level()) &&
-//                       (cell->neighbor(f)->has_children() == true) &&
-//                       (cell_is_in_solid_domain(
-//                           cell->neighbor_child_on_subface(f, 0)))) ||
-//                      (cell->neighbor_is_coarser(f) &&
-//                       cell_is_in_solid_domain(cell->neighbor(f)))))
-//                     estimated_error_per_cell(cell->active_cell_index()) = 0;
-//             }
-//     }
-//     GridRefinement::refine_and_coarsen_fixed_number(triangulation,
-//                                                     estimated_error_per_cell,
-//                                                     0.3,
-//                                                     0.0);
-//     triangulation.execute_coarsening_and_refinement();
-// }
+    Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
+
+    estimated_error_per_cell += stokes_estimated_error_per_cell;
+
+    estimated_error_per_cell += elasticity_estimated_error_per_cell;
+
+    // The second to last part of the function, before actually refining the
+    // mesh, involves a heuristic that we have already mentioned in the
+    // introduction: because the solution is discontinuous, the
+    // KellyErrorEstimator class gets all confused about cells that sit at
+    // the
+    // boundary between subdomains: it believes that the error is large there
+    // because the jump in the gradient is large, even though this is
+    // entirely
+    // expected and a feature that is in fact present in the exact solution
+    // as
+    // well and therefore not indicative of any numerical error.
+    //
+    // Consequently, we set the error indicators to zero for all cells at the
+    // interface; the conditions determining which cells this affects are
+    // slightly awkward because we have to account for the possibility of
+    // adaptively refined meshes, meaning that the neighboring cell can be
+    // coarser than the current one, or could in fact be refined some
+    // more. The structure of these nested conditions is much the same as we
+    // encountered when assembling interface terms in
+    // <code>assemble_system</code>.
+    for (const auto &cell : dof_handler.active_cell_iterators())
+    {
+        if (!cell->is_locally_owned())
+            continue;
+
+        for (const auto f : cell->face_indices())
+            if (cell_is_in_solid_domain(cell))
+            {
+                if ((cell->at_boundary(f) == false) &&
+                    (((cell->neighbor(f)->level() == cell->level()) &&
+                      (cell->neighbor(f)->has_children() == false) &&
+                      cell_is_in_fluid_domain(cell->neighbor(f))) ||
+                     ((cell->neighbor(f)->level() == cell->level()) &&
+                      (cell->neighbor(f)->has_children() == true) &&
+                      (cell_is_in_fluid_domain(
+                          cell->neighbor_child_on_subface(f, 0)))) ||
+                     (cell->neighbor_is_coarser(f) &&
+                      cell_is_in_fluid_domain(cell->neighbor(f)))))
+                    estimated_error_per_cell(cell->active_cell_index()) = 0;
+            }
+            else
+            {
+                if ((cell->at_boundary(f) == false) &&
+                    (((cell->neighbor(f)->level() == cell->level()) &&
+                      (cell->neighbor(f)->has_children() == false) &&
+                      cell_is_in_solid_domain(cell->neighbor(f))) ||
+                     ((cell->neighbor(f)->level() == cell->level()) &&
+                      (cell->neighbor(f)->has_children() == true) &&
+                      (cell_is_in_solid_domain(
+                          cell->neighbor_child_on_subface(f, 0)))) ||
+                     (cell->neighbor_is_coarser(f) &&
+                      cell_is_in_solid_domain(cell->neighbor(f)))))
+                    estimated_error_per_cell(cell->active_cell_index()) = 0;
+            }
+    }
+
+     parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(triangulation,
+                                                    estimated_error_per_cell,
+                                                    0.3,
+                                                    0.0);
+     triangulation.execute_coarsening_and_refinement();
+
+    //  for (const auto &cell : triangulation.active_cell_iterators())
+    // {
+    //     for (const auto &face : cell->face_iterators())
+    //         if (face->at_boundary() && (face->center()[dim - 1] == 1))
+    //         face->set_all_boundary_ids(1);
+    // }
+
+    //  for (const auto &cell : triangulation.active_cell_iterators())
+    // {
+    //     if (((std::fabs(cell->center()[0]) < 0.25) &&
+    //          (cell->center()[dim - 1] > 0.5)) ||
+    //         ((std::fabs(cell->center()[0]) >= 0.25) &&
+    //          (cell->center()[dim - 1] > -0.5)))
+    //         cell->set_material_id(fluid_domain_id);
+    //     else
+    //         cell->set_material_id(solid_domain_id);
+    // }
+
+    pcout << "Refinement done!" << std::endl;
+}
+

@@ -10,6 +10,7 @@
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/distributed/fully_distributed_tria.h>
+#include <deal.II/distributed/grid_refinement.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
@@ -153,7 +154,8 @@ public:
   output_matrix() const;
 #endif
 
-  // void refine_mesh();
+  void
+  refine_mesh();
 
   class StokesBoundaryValues : public Function<dim>
   {
