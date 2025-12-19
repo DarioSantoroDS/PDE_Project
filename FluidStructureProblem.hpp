@@ -7,6 +7,7 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/timer.h>
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/distributed/fully_distributed_tria.h>
@@ -93,7 +94,7 @@ public:
 
 private:
   void
-                    declare_parameters();
+  declare_parameters();
   ParameterHandler &prm;
 };
 
@@ -102,13 +103,15 @@ class FluidStructureProblem
 {
 public:
   static constexpr unsigned int dim = 2;
-
-  FluidStructureProblem(const unsigned int stokes_degree,
-                        const unsigned int elasticity_degree,
-                        ParameterHandler  &param)
-    : stokes_degree(stokes_degree)
-    , elasticity_degree(elasticity_degree)
-    , prm(param)
+  // constructor
+  FluidStructureProblem(ParameterHandler &param)
+    : prm(param)
+    , problemsize(param.get_integer(std::vector<std::string>{"Geometry"},
+                                    "Number of cells per edge"))
+    , stokes_degree(param.get_integer(std::vector<std::string>{"Geometry"},
+                                      "Stokes degree"))
+    , elasticity_degree(param.get_integer(std::vector<std::string>{"Geometry"},
+                                          "Elasticity degree"))
     , triangulation(
         MPI_COMM_WORLD,
         Triangulation<dim>::MeshSmoothing::limit_level_difference_at_vertices,
@@ -129,19 +132,23 @@ public:
                     FE_Q<dim>(elasticity_degree),
                     dim)
     , dof_handler(triangulation)
-    , viscosity(2)
-    , lambda(1)
-    , mu(1)
+    , viscosity(
+        param.get_double(std::vector<std::string>{"Physics"}, "Viscosity"))
+    , lambda(param.get_double(std::vector<std::string>{"Physics"}, "lambda"))
+    , mu(param.get_double(std::vector<std::string>{"Physics"}, "mu"))
     , pcout(std::cout, mpi_rank == 0)
+    , timer(MPI_COMM_WORLD, pcout, TimerOutput::never, TimerOutput::wall_times)
+
   {
     fe_collection.push_back(stokes_fe);
     fe_collection.push_back(elasticity_fe);
   }
-  void set_boundary_ids (
-  parallel::distributed::Triangulation<dim> &triangulation) const;
   void
-  create_coarse_mesh (
-  parallel::distributed::Triangulation<dim> &coarse_grid) const;
+  set_boundary_ids(
+    parallel::distributed::Triangulation<dim> &triangulation) const;
+  void
+  create_coarse_mesh(
+    parallel::distributed::Triangulation<dim> &coarse_grid) const;
   void
   make_grid();
   void
@@ -162,7 +169,6 @@ public:
   void
   output_matrix() const;
 #endif
-
   void
   refine_mesh();
 
@@ -244,7 +250,7 @@ public:
     vmult(TrilinosWrappers::MPI::BlockVector       &dst,
           const TrilinosWrappers::MPI::BlockVector &src) const
     {
-      SolverControl                           solver_control_velocity(1000,
+      SolverControl              solver_control_velocity(1000,
                                             1e-2 * src.block(0).l2_norm());
       SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_velocity(
         solver_control_velocity);
@@ -520,10 +526,11 @@ private:
 
 public:
   ConditionalOStream pcout;
+  TimerOutput        timer;
 
 private:
-  AffineConstraints<double> constraints;
-  int  problemsize;
+  AffineConstraints<double>  constraints;
+  const int                  problemsize;
   SparsityPattern            sparsity_pattern;
   LA::MPI::BlockSparseMatrix system_matrix;
   LA::MPI::BlockSparseMatrix pressure_mass;

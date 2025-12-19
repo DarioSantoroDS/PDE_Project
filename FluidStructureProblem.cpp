@@ -11,25 +11,49 @@ ParameterReader::declare_parameters()
   prm.enter_subsection("Geometry");
   {
     prm.declare_entry("Number of cells per edge",
-                      "8",                 // Default value in file
-                      Patterns::Integer(1), 
+                      "8", // Default value in file
+                      Patterns::Integer(1),
                       "The number of cells per edge of the domain");
+    prm.declare_entry("Stokes degree",
+                      "2", // Default value in file
+                      Patterns::Integer(1),
+                      "The polynomial degree for the Stokes problem");
+    prm.declare_entry("Elasticity degree",
+                      "1", // Default value in file
+                      Patterns::Integer(1),
+                      "The polynomial degree for the Elasticity problem");
     prm.declare_entry("Fluid weight",
-                      "1",                 // Default is same for 
-                      Patterns::Integer(1), 
+                      "1", // Default is same for
+                      Patterns::Integer(1),
                       "Weight given to the fluid cell");
     prm.declare_entry("Solid weight",
-                      "1",                 // Default is same for 
-                      Patterns::Integer(1), 
+                      "1", // Default is same for
+                      Patterns::Integer(1),
                       "Weight given to the solid cell");
-                    }
+  }
   prm.leave_subsection();
   prm.enter_subsection("Refinement");
   {
     prm.declare_entry("Refinement cycles",
-                      "1",                 // Default value in file
-                      Patterns::Integer(1), 
+                      "1", // Default value in file
+                      Patterns::Integer(1),
                       "Number of refinement cycles to be performed");
+  }
+  prm.leave_subsection();
+  prm.enter_subsection("Physics");
+  {
+    prm.declare_entry("Viscosity",
+                      "1.0", // Default value in file
+                      Patterns::Double(0.0),
+                      "The viscosity of the fluid");
+    prm.declare_entry("lambda",
+                      "1.0", // Default value in file
+                      Patterns::Double(0.0),
+                      "The first Lamé parameter of the solid");
+    prm.declare_entry("mu",
+                      "1.0", // Default value in file
+                      Patterns::Double(0.0),
+                      "The second Lamé parameter of the solid");
   }
   prm.leave_subsection();
 }
@@ -41,7 +65,8 @@ ParameterReader::read_parameters(const std::string &parameter_file)
   prm.parse_input(parameter_file);
 }
 
-void FluidStructureProblem::set_boundary_ids (
+void
+FluidStructureProblem::set_boundary_ids(
   parallel::distributed::Triangulation<dim> &triangulation) const
 {
   // for (const auto &cell : triangulation.active_cell_iterators())
@@ -63,7 +88,7 @@ void FluidStructureProblem::set_boundary_ids (
 }
 
 void
-FluidStructureProblem::create_coarse_mesh (
+FluidStructureProblem::create_coarse_mesh(
   parallel::distributed::Triangulation<dim> &coarse_grid) const
 {
   // GridGenerator::subdivided_hyper_cube(coarse_grid, problemsize, -1, 1);
@@ -77,12 +102,11 @@ FluidStructureProblem::create_coarse_mesh (
 void
 FluidStructureProblem::make_grid()
 {
+  TimerOutput::Scope t(timer, "make_grid");
   pcout << "Generating the mesh..." << std::endl;
-    prm.enter_subsection("Geometry");
-  problemsize =
-    prm.get_integer("Number of cells per edge");
+  prm.enter_subsection("Geometry");
   const int fluid_weight = prm.get_integer("Fluid weight");
-    const int solid_weight = prm.get_integer("Solid weight");
+  const int solid_weight = prm.get_integer("Solid weight");
   prm.leave_subsection();
   GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
 
@@ -104,7 +128,8 @@ FluidStructureProblem::make_grid()
     }
 
   // triangulation.signals.cell_weight.connect(
-  //   [&](const typename parallel::distributed::Triangulation<dim>::cell_iterator
+  //   [&](const typename
+  //   parallel::distributed::Triangulation<dim>::cell_iterator
   //         &cell,
   //       const typename parallel::distributed::Triangulation<dim>::CellStatus
   //         status) -> unsigned int {
@@ -144,12 +169,14 @@ FluidStructureProblem::set_active_fe_indices()
       else
         Assert(false, ExcNotImplemented());
     }
-  pcout  << "Done!" << std::endl;
- } 
+  pcout << "Done!" << std::endl;
+}
 
 void
-  FluidStructureProblem::setup_dofs()
+FluidStructureProblem::setup_dofs()
 {
+    TimerOutput::Scope t(timer, "setup_dofs");
+
   set_active_fe_indices();
   dof_handler.distribute_dofs(fe_collection);
   // DoFRenumbering::Cuthill_McKee(dof_handler);
@@ -350,8 +377,8 @@ void
 #  endif
 #endif
 #ifdef ALTERNATIVE_PATTERN
-    system_matrix.clear();
-    pressure_mass.clear();
+  system_matrix.clear();
+  pressure_mass.clear();
   BlockDynamicSparsityPattern dsp(dofs_per_block, dofs_per_block);
 
   Table<2, DoFTools::Coupling> cell_coupling(fe_collection.n_components(),
@@ -431,6 +458,8 @@ void
 void
 FluidStructureProblem::assemble_system()
 {
+    TimerOutput::Scope t(timer, "assembly_system");
+
   pcout << "Assembling the system..." << mpi_rank << std::endl;
   system_matrix = 0.0;
   system_rhs    = 0.0;
@@ -792,6 +821,7 @@ FluidStructureProblem::assemble_interface_term(
 void
 FluidStructureProblem::output_matrix() const
 {
+
 #  ifdef USE_PETSC_LA
   PetscViewer mat_viewer;
   // Create an ASCII viewer that writes to "system_matrix.m"
@@ -824,6 +854,8 @@ FluidStructureProblem::output_matrix() const
 void
 FluidStructureProblem::solve()
 {
+      TimerOutput::Scope t(timer, "solve");
+
   pcout << "solvingthissutff" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
                                                        MPI_COMM_WORLD);
@@ -846,6 +878,8 @@ FluidStructureProblem::solve()
 void
 FluidStructureProblem::solve_iterative()
 {
+      TimerOutput::Scope t(timer, "solve_iterative");
+
   pcout << "solvingthissutff iterative" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
                                                        MPI_COMM_WORLD);
@@ -891,6 +925,7 @@ FluidStructureProblem::solve_iterative()
 void
 FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
 {
+
   std::cout << "Writing output..." << std::endl;
   std::vector<std::string> solution_names(dim, "velocity");
   solution_names.emplace_back("pressure");
@@ -937,174 +972,175 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
   pcout << "   Written solution_" << refinement_cycle << ".pvtu" << std::endl;
 }
 
-void FluidStructureProblem::refine_mesh()
+void
+FluidStructureProblem::refine_mesh()
 {
-    pcout << "Refining mesh..." << std::endl;
+      TimerOutput::Scope t(timer, "refining");
 
-    Vector<float> stokes_estimated_error_per_cell(
-        triangulation.n_active_cells());
-    Vector<float> elasticity_estimated_error_per_cell(
-        triangulation.n_active_cells());
+  pcout << "Refining mesh..." << std::endl;
 
-    const QGauss<dim - 1> stokes_face_quadrature(stokes_degree + 2);
-    const QGauss<dim - 1> elasticity_face_quadrature(elasticity_degree + 2);
+  Vector<float> stokes_estimated_error_per_cell(triangulation.n_active_cells());
+  Vector<float> elasticity_estimated_error_per_cell(
+    triangulation.n_active_cells());
 
-    hp::QCollection<dim - 1> face_q_collection;
-    face_q_collection.push_back(stokes_face_quadrature);
-    face_q_collection.push_back(elasticity_face_quadrature);
+  const QGauss<dim - 1> stokes_face_quadrature(stokes_degree + 2);
+  const QGauss<dim - 1> elasticity_face_quadrature(elasticity_degree + 2);
 
-    const FEValuesExtractors::Vector velocities(0);
-    KellyErrorEstimator<dim>::estimate(
-      dof_handler,
-      face_q_collection,
-      std::map<types::boundary_id, const Function<dim> *>(),
-      locally_relevant_solution,
-      stokes_estimated_error_per_cell,
-      fe_collection.component_mask(velocities));
-    //   nullptr,
-    // 0,
-    // triangulation.locally_owned_subdomain());
+  hp::QCollection<dim - 1> face_q_collection;
+  face_q_collection.push_back(stokes_face_quadrature);
+  face_q_collection.push_back(elasticity_face_quadrature);
 
-    const FEValuesExtractors::Vector displacements(dim + 1);
-    KellyErrorEstimator<dim>::estimate(
-        dof_handler,
-        face_q_collection,
-        std::map<types::boundary_id, const Function<dim> *>(),
-        locally_relevant_solution,
-        elasticity_estimated_error_per_cell,
-        fe_collection.component_mask(displacements));
-    //   nullptr,
-    // 0,
-    // triangulation.locally_owned_subdomain());
+  const FEValuesExtractors::Vector velocities(0);
+  KellyErrorEstimator<dim>::estimate(
+    dof_handler,
+    face_q_collection,
+    std::map<types::boundary_id, const Function<dim> *>(),
+    locally_relevant_solution,
+    stokes_estimated_error_per_cell,
+    fe_collection.component_mask(velocities));
+  //   nullptr,
+  // 0,
+  // triangulation.locally_owned_subdomain());
 
-    // const FEValuesExtractors::Vector velocities(0);
-    // KellyErrorEstimator<dim>::estimate(
-    //   dof_handler,
-    //   face_q_collection,
-    //   std::map<types::boundary_id, const Function<dim> *>(),
-    //   solution,
-    //   stokes_estimated_error_per_cell,
-    //   fe_collection.component_mask(velocities));
+  const FEValuesExtractors::Vector displacements(dim + 1);
+  KellyErrorEstimator<dim>::estimate(
+    dof_handler,
+    face_q_collection,
+    std::map<types::boundary_id, const Function<dim> *>(),
+    locally_relevant_solution,
+    elasticity_estimated_error_per_cell,
+    fe_collection.component_mask(displacements));
+  //   nullptr,
+  // 0,
+  // triangulation.locally_owned_subdomain());
 
-    // const FEValuesExtractors::Vector displacements(dim + 1);
-    // KellyErrorEstimator<dim>::estimate(
-    //   dof_handler,
-    //   face_q_collection,
-    //   std::map<types::boundary_id, const Function<dim> *>(),
-    //   solution,
-    //   elasticity_estimated_error_per_cell,
-    //   fe_collection.component_mask(displacements));
+  // const FEValuesExtractors::Vector velocities(0);
+  // KellyErrorEstimator<dim>::estimate(
+  //   dof_handler,
+  //   face_q_collection,
+  //   std::map<types::boundary_id, const Function<dim> *>(),
+  //   solution,
+  //   stokes_estimated_error_per_cell,
+  //   fe_collection.component_mask(velocities));
+
+  // const FEValuesExtractors::Vector displacements(dim + 1);
+  // KellyErrorEstimator<dim>::estimate(
+  //   dof_handler,
+  //   face_q_collection,
+  //   std::map<types::boundary_id, const Function<dim> *>(),
+  //   solution,
+  //   elasticity_estimated_error_per_cell,
+  //   fe_collection.component_mask(displacements));
 
 
-    // We then normalize error estimates by dividing by their norm and scale
-    // the fluid error indicators by a factor of 4 as discussed in the
-    // introduction. The results are then added together into a vector that
-    // contains error indicators for all cells:
-    // TODO Commented because of l2 norm may not work corectly
-    double stokes_local_sum = 0.0;
+  // We then normalize error estimates by dividing by their norm and scale
+  // the fluid error indicators by a factor of 4 as discussed in the
+  // introduction. The results are then added together into a vector that
+  // contains error indicators for all cells:
+  // TODO Commented because of l2 norm may not work corectly
+  double stokes_local_sum = 0.0;
 
-    for (unsigned int i = 0; i < stokes_estimated_error_per_cell.size(); ++i)
-    stokes_local_sum += stokes_estimated_error_per_cell[i] * stokes_estimated_error_per_cell[i];
-    const double stokes_global_sum = Utilities::MPI::sum(stokes_local_sum, MPI_COMM_WORLD);
-    const double stokes_l2_norm = std::sqrt(stokes_global_sum);
+  for (unsigned int i = 0; i < stokes_estimated_error_per_cell.size(); ++i)
+    stokes_local_sum +=
+      stokes_estimated_error_per_cell[i] * stokes_estimated_error_per_cell[i];
+  const double stokes_global_sum =
+    Utilities::MPI::sum(stokes_local_sum, MPI_COMM_WORLD);
+  const double stokes_l2_norm = std::sqrt(stokes_global_sum);
 
-    double elasticity_local_sum = 0.0;
-    for (unsigned int i = 0; i < elasticity_estimated_error_per_cell.size(); ++i)
-    elasticity_local_sum += elasticity_estimated_error_per_cell[i] * elasticity_estimated_error_per_cell[i];
-    const double elasticity_global_sum = Utilities::MPI::sum(elasticity_local_sum, MPI_COMM_WORLD);
-    const double elasticity_l2_norm = std::sqrt(elasticity_global_sum);
+  double elasticity_local_sum = 0.0;
+  for (unsigned int i = 0; i < elasticity_estimated_error_per_cell.size(); ++i)
+    elasticity_local_sum += elasticity_estimated_error_per_cell[i] *
+                            elasticity_estimated_error_per_cell[i];
+  const double elasticity_global_sum =
+    Utilities::MPI::sum(elasticity_local_sum, MPI_COMM_WORLD);
+  const double elasticity_l2_norm = std::sqrt(elasticity_global_sum);
 
-    stokes_estimated_error_per_cell *=
-        4. / stokes_l2_norm;
-    elasticity_estimated_error_per_cell *=
-        1. / elasticity_l2_norm;
+  stokes_estimated_error_per_cell *= 4. / stokes_l2_norm;
+  elasticity_estimated_error_per_cell *= 1. / elasticity_l2_norm;
 
-    Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
+  Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
 
-    estimated_error_per_cell += stokes_estimated_error_per_cell;
+  estimated_error_per_cell += stokes_estimated_error_per_cell;
 
-    estimated_error_per_cell += elasticity_estimated_error_per_cell;
+  estimated_error_per_cell += elasticity_estimated_error_per_cell;
 
-    // The second to last part of the function, before actually refining the
-    // mesh, involves a heuristic that we have already mentioned in the
-    // introduction: because the solution is discontinuous, the
-    // KellyErrorEstimator class gets all confused about cells that sit at
-    // the
-    // boundary between subdomains: it believes that the error is large there
-    // because the jump in the gradient is large, even though this is
-    // entirely
-    // expected and a feature that is in fact present in the exact solution
-    // as
-    // well and therefore not indicative of any numerical error.
-    //
-    // Consequently, we set the error indicators to zero for all cells at the
-    // interface; the conditions determining which cells this affects are
-    // slightly awkward because we have to account for the possibility of
-    // adaptively refined meshes, meaning that the neighboring cell can be
-    // coarser than the current one, or could in fact be refined some
-    // more. The structure of these nested conditions is much the same as we
-    // encountered when assembling interface terms in
-    // <code>assemble_system</code>.
-    for (const auto &cell : dof_handler.active_cell_iterators())
+  // The second to last part of the function, before actually refining the
+  // mesh, involves a heuristic that we have already mentioned in the
+  // introduction: because the solution is discontinuous, the
+  // KellyErrorEstimator class gets all confused about cells that sit at
+  // the
+  // boundary between subdomains: it believes that the error is large there
+  // because the jump in the gradient is large, even though this is
+  // entirely
+  // expected and a feature that is in fact present in the exact solution
+  // as
+  // well and therefore not indicative of any numerical error.
+  //
+  // Consequently, we set the error indicators to zero for all cells at the
+  // interface; the conditions determining which cells this affects are
+  // slightly awkward because we have to account for the possibility of
+  // adaptively refined meshes, meaning that the neighboring cell can be
+  // coarser than the current one, or could in fact be refined some
+  // more. The structure of these nested conditions is much the same as we
+  // encountered when assembling interface terms in
+  // <code>assemble_system</code>.
+  for (const auto &cell : dof_handler.active_cell_iterators())
     {
-        if (!cell->is_locally_owned())
-            continue;
+      if (!cell->is_locally_owned())
+        continue;
 
-        for (const auto f : cell->face_indices())
-            if (cell_is_in_solid_domain(cell))
-            {
-                if ((cell->at_boundary(f) == false) &&
-                    (((cell->neighbor(f)->level() == cell->level()) &&
-                      (cell->neighbor(f)->has_children() == false) &&
-                      cell_is_in_fluid_domain(cell->neighbor(f))) ||
-                     ((cell->neighbor(f)->level() == cell->level()) &&
-                      (cell->neighbor(f)->has_children() == true) &&
-                      (cell_is_in_fluid_domain(
-                          cell->neighbor_child_on_subface(f, 0)))) ||
-                     (cell->neighbor_is_coarser(f) &&
-                      cell_is_in_fluid_domain(cell->neighbor(f)))))
-                    estimated_error_per_cell(cell->active_cell_index()) = 0;
-            }
-            else
-            {
-                if ((cell->at_boundary(f) == false) &&
-                    (((cell->neighbor(f)->level() == cell->level()) &&
-                      (cell->neighbor(f)->has_children() == false) &&
-                      cell_is_in_solid_domain(cell->neighbor(f))) ||
-                     ((cell->neighbor(f)->level() == cell->level()) &&
-                      (cell->neighbor(f)->has_children() == true) &&
-                      (cell_is_in_solid_domain(
-                          cell->neighbor_child_on_subface(f, 0)))) ||
-                     (cell->neighbor_is_coarser(f) &&
-                      cell_is_in_solid_domain(cell->neighbor(f)))))
-                    estimated_error_per_cell(cell->active_cell_index()) = 0;
-            }
+      for (const auto f : cell->face_indices())
+        if (cell_is_in_solid_domain(cell))
+          {
+            if ((cell->at_boundary(f) == false) &&
+                (((cell->neighbor(f)->level() == cell->level()) &&
+                  (cell->neighbor(f)->has_children() == false) &&
+                  cell_is_in_fluid_domain(cell->neighbor(f))) ||
+                 ((cell->neighbor(f)->level() == cell->level()) &&
+                  (cell->neighbor(f)->has_children() == true) &&
+                  (cell_is_in_fluid_domain(
+                    cell->neighbor_child_on_subface(f, 0)))) ||
+                 (cell->neighbor_is_coarser(f) &&
+                  cell_is_in_fluid_domain(cell->neighbor(f)))))
+              estimated_error_per_cell(cell->active_cell_index()) = 0;
+          }
+        else
+          {
+            if ((cell->at_boundary(f) == false) &&
+                (((cell->neighbor(f)->level() == cell->level()) &&
+                  (cell->neighbor(f)->has_children() == false) &&
+                  cell_is_in_solid_domain(cell->neighbor(f))) ||
+                 ((cell->neighbor(f)->level() == cell->level()) &&
+                  (cell->neighbor(f)->has_children() == true) &&
+                  (cell_is_in_solid_domain(
+                    cell->neighbor_child_on_subface(f, 0)))) ||
+                 (cell->neighbor_is_coarser(f) &&
+                  cell_is_in_solid_domain(cell->neighbor(f)))))
+              estimated_error_per_cell(cell->active_cell_index()) = 0;
+          }
     }
 
-     parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(triangulation,
-                                                    estimated_error_per_cell,
-                                                    0.3,
-                                                    0.0);
-     triangulation.execute_coarsening_and_refinement();
+  parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
+    triangulation, estimated_error_per_cell, 0.3, 0.0);
+  triangulation.execute_coarsening_and_refinement();
 
-    //  for (const auto &cell : triangulation.active_cell_iterators())
-    // {
-    //     for (const auto &face : cell->face_iterators())
-    //         if (face->at_boundary() && (face->center()[dim - 1] == 1))
-    //         face->set_all_boundary_ids(1);
-    // }
+  //  for (const auto &cell : triangulation.active_cell_iterators())
+  // {
+  //     for (const auto &face : cell->face_iterators())
+  //         if (face->at_boundary() && (face->center()[dim - 1] == 1))
+  //         face->set_all_boundary_ids(1);
+  // }
 
-    //  for (const auto &cell : triangulation.active_cell_iterators())
-    // {
-    //     if (((std::fabs(cell->center()[0]) < 0.25) &&
-    //          (cell->center()[dim - 1] > 0.5)) ||
-    //         ((std::fabs(cell->center()[0]) >= 0.25) &&
-    //          (cell->center()[dim - 1] > -0.5)))
-    //         cell->set_material_id(fluid_domain_id);
-    //     else
-    //         cell->set_material_id(solid_domain_id);
-    // }
+  //  for (const auto &cell : triangulation.active_cell_iterators())
+  // {
+  //     if (((std::fabs(cell->center()[0]) < 0.25) &&
+  //          (cell->center()[dim - 1] > 0.5)) ||
+  //         ((std::fabs(cell->center()[0]) >= 0.25) &&
+  //          (cell->center()[dim - 1] > -0.5)))
+  //         cell->set_material_id(fluid_domain_id);
+  //     else
+  //         cell->set_material_id(solid_domain_id);
+  // }
 
-    pcout << "Refinement done!" << std::endl;
+  pcout << "Refinement done!" << std::endl;
 }
-

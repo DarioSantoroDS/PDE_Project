@@ -12,19 +12,20 @@ main(int argc, char *argv[])
   // {
 
 
-// #ifdef DEBUG
+#ifdef DEBUG
   // Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv, 1);
   std::cout << "im in debug mode" << std::endl;
-// #else
+#endif
+  // #else
   Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
-// #endif
+  // #endif
   ParameterHandler prm;
   ParameterReader  param(prm);
   param.read_parameters("config.prm");
   prm.enter_subsection("Refinement");
-  const unsigned int    n_refinement = prm.get_integer("Refinement cycles");
+  const unsigned int n_refinement = prm.get_integer("Refinement cycles");
   prm.leave_subsection();
-  FluidStructureProblem flow_problem(1, 1, prm);
+  FluidStructureProblem flow_problem(prm);
   flow_problem.make_grid();
   for (unsigned int refinement_cycle = 0; refinement_cycle < n_refinement;
        ++refinement_cycle)
@@ -44,6 +45,8 @@ main(int argc, char *argv[])
 
       flow_problem.pcout << "   Writing output..." << std::endl;
       flow_problem.output_results(refinement_cycle);
+      flow_problem.timer.print_summary();
+      flow_problem.timer.reset();
     }
   flow_problem.pcout << std::endl;
   // }
