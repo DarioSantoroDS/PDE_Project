@@ -41,12 +41,45 @@ ParameterReader::read_parameters(const std::string &parameter_file)
   prm.parse_input(parameter_file);
 }
 
+void FluidStructureProblem::set_boundary_ids (
+  parallel::distributed::Triangulation<dim> &triangulation) const
+{
+  // for (const auto &cell : triangulation.active_cell_iterators())
+  //   {
+  //     for (const auto &face : cell->face_iterators())
+  //       if (face->at_boundary() && (face->center()[dim - 1] == 1))
+  //         face->set_all_boundary_ids(1);
+  //   }
+  // for (const auto &cell : triangulation.active_cell_iterators())
+  //   {
+  //     if (((std::fabs(cell->center()[0]) < 0.25) &&
+  //          (cell->center()[dim - 1] > 0.5)) ||
+  //         ((std::fabs(cell->center()[0]) >= 0.25) &&
+  //          (cell->center()[dim - 1] > -0.5)))
+  //       cell->set_material_id(fluid_domain_id);
+  //     else
+  //       cell->set_material_id(solid_domain_id);
+  //   }
+}
+
+void
+FluidStructureProblem::create_coarse_mesh (
+  parallel::distributed::Triangulation<dim> &coarse_grid) const
+{
+  // GridGenerator::subdivided_hyper_cube(coarse_grid, problemsize, -1, 1);
+  // set_boundary_ids(coarse_grid);
+
+  // coarse_grid.signals.post_refinement.connect(
+  //   [this, &coarse_grid]() { this->set_boundary_ids(coarse_grid); });
+}
+
+
 void
 FluidStructureProblem::make_grid()
 {
   pcout << "Generating the mesh..." << std::endl;
     prm.enter_subsection("Geometry");
-  const int problemsize =
+  problemsize =
     prm.get_integer("Number of cells per edge");
   const int fluid_weight = prm.get_integer("Fluid weight");
     const int solid_weight = prm.get_integer("Solid weight");
@@ -102,8 +135,8 @@ FluidStructureProblem::set_active_fe_indices()
   pcout << "Setting active fe indeces.." << std::endl;
   for (const auto &cell : dof_handler.active_cell_iterators())
     {
-      // if (!cell->is_locally_owned())
-      //   continue;
+      if (!cell->is_locally_owned())
+        continue;
       if (cell_is_in_fluid_domain(cell))
         cell->set_active_fe_index(0);
       else if (cell_is_in_solid_domain(cell))
@@ -111,11 +144,11 @@ FluidStructureProblem::set_active_fe_indices()
       else
         Assert(false, ExcNotImplemented());
     }
-  pcout << "Done!" << std::endl;
-}
+  pcout  << "Done!" << std::endl;
+ } 
 
 void
-FluidStructureProblem::setup_dofs()
+  FluidStructureProblem::setup_dofs()
 {
   set_active_fe_indices();
   dof_handler.distribute_dofs(fe_collection);
@@ -903,9 +936,11 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
     "./", "solution", refinement_cycle, MPI_COMM_WORLD, 2, 8);
   pcout << "   Written solution_" << refinement_cycle << ".pvtu" << std::endl;
 }
+
 void FluidStructureProblem::refine_mesh()
 {
     pcout << "Refining mesh..." << std::endl;
+
     Vector<float> stokes_estimated_error_per_cell(
         triangulation.n_active_cells());
     Vector<float> elasticity_estimated_error_per_cell(
@@ -965,11 +1000,24 @@ void FluidStructureProblem::refine_mesh()
     // the fluid error indicators by a factor of 4 as discussed in the
     // introduction. The results are then added together into a vector that
     // contains error indicators for all cells:
-    // TODO Commented because of l2 norm may not work corectly 
+    // TODO Commented because of l2 norm may not work corectly
+    double stokes_local_sum = 0.0;
+
+    for (unsigned int i = 0; i < stokes_estimated_error_per_cell.size(); ++i)
+    stokes_local_sum += stokes_estimated_error_per_cell[i] * stokes_estimated_error_per_cell[i];
+    const double stokes_global_sum = Utilities::MPI::sum(stokes_local_sum, MPI_COMM_WORLD);
+    const double stokes_l2_norm = std::sqrt(stokes_global_sum);
+
+    double elasticity_local_sum = 0.0;
+    for (unsigned int i = 0; i < elasticity_estimated_error_per_cell.size(); ++i)
+    elasticity_local_sum += elasticity_estimated_error_per_cell[i] * elasticity_estimated_error_per_cell[i];
+    const double elasticity_global_sum = Utilities::MPI::sum(elasticity_local_sum, MPI_COMM_WORLD);
+    const double elasticity_l2_norm = std::sqrt(elasticity_global_sum);
+
     stokes_estimated_error_per_cell *=
-        4. / stokes_estimated_error_per_cell.l2_norm();
+        4. / stokes_l2_norm;
     elasticity_estimated_error_per_cell *=
-        1. / elasticity_estimated_error_per_cell.l2_norm();
+        1. / elasticity_l2_norm;
 
     Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
 

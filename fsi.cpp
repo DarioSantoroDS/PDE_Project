@@ -12,12 +12,12 @@ main(int argc, char *argv[])
   // {
 
 
-#ifdef DEBUG
-  Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv, 1);
+// #ifdef DEBUG
+  // Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv, 1);
   std::cout << "im in debug mode" << std::endl;
-#else
+// #else
   Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
-#endif
+// #endif
   ParameterHandler prm;
   ParameterReader  param(prm);
   param.read_parameters("config.prm");
