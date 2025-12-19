@@ -10,6 +10,7 @@
 #include <deal.II/base/utilities.h>
 
 #include <deal.II/distributed/fully_distributed_tria.h>
+#include <deal.II/distributed/grid_refinement.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
@@ -108,7 +109,11 @@ public:
     : stokes_degree(stokes_degree)
     , elasticity_degree(elasticity_degree)
     , prm(param)
-    , triangulation(MPI_COMM_WORLD, Triangulation<dim>::maximum_smoothing)
+    , triangulation(
+        MPI_COMM_WORLD,
+        Triangulation<dim>::MeshSmoothing::limit_level_difference_at_vertices,
+        parallel::distributed::Triangulation<
+          dim>::Settings::no_automatic_repartitioning)
     , stokes_fe(FE_Q<dim>(stokes_degree + 1),
                 dim,
                 FE_Q<dim>(stokes_degree),
@@ -132,6 +137,11 @@ public:
     fe_collection.push_back(stokes_fe);
     fe_collection.push_back(elasticity_fe);
   }
+  void set_boundary_ids (
+  parallel::distributed::Triangulation<dim> &triangulation) const;
+  void
+  create_coarse_mesh (
+  parallel::distributed::Triangulation<dim> &coarse_grid) const;
   void
   make_grid();
   void
@@ -153,7 +163,10 @@ public:
   output_matrix() const;
 #endif
 
-  // void refine_mesh();
+  void
+  refine_mesh();
+
+
 
   class StokesBoundaryValues : public Function<dim>
   {
@@ -510,7 +523,7 @@ public:
 
 private:
   AffineConstraints<double> constraints;
-
+  int  problemsize;
   SparsityPattern            sparsity_pattern;
   LA::MPI::BlockSparseMatrix system_matrix;
   LA::MPI::BlockSparseMatrix pressure_mass;
