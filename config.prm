@@ -5,5 +5,5 @@ subsection Geometry
 end
 
 subsection Refinement
-  set Refinement cycles = 2
+  set Refinement cycles = 5
 end
