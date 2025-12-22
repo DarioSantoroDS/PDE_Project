@@ -94,7 +94,7 @@ public:
 
 private:
   void
-                    declare_parameters();
+  declare_parameters();
   ParameterHandler &prm;
 };
 
@@ -172,7 +172,7 @@ public:
   output_matrix() const;
 #endif
   void
-  refine_mesh();
+  refine_mesh(const unsigned int n_cycle);
 
 
 
@@ -260,9 +260,10 @@ public:
                                dst.block(0),
                                src.block(0),
                                preconditioner_velocity);
-      // std::cout << "  " << solver_control_velocity.last_step() << " CG1 iterations"
-      //       << std::endl;
-
+#ifdef DEBUG
+      std::cout << "  " << solver_control_velocity.last_step()
+                << " CG1 iterations" << std::endl;
+#endif
       tmpStokes.reinit(src.block(1));
       B->vmult(tmpStokes, dst.block(0));
       tmpStokes.sadd(-1.0, src.block(1));
@@ -274,8 +275,10 @@ public:
                                dst.block(1),
                                tmpStokes,
                                preconditioner_pressure);
-      // std::cout << "  " << solver_control_pressure.last_step() << " CG2 iterations"
-      //       << std::endl;
+#ifdef DEBUG
+      std::cout << "  " << solver_control_pressure.last_step()
+                << " CG2 iterations" << std::endl;
+#endif
 
       tmpStokes.reinit(src.block(2));
       D1->vmult(tmpStokes, dst.block(0));
@@ -294,8 +297,10 @@ public:
                             dst.block(2),
                             tmpStokes,
                             preconditioner_solid);
-      // std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
-      //       << std::endl;
+#ifdef DEBUG
+      std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
+                << std::endl;
+#endif
     }
 
   protected:
@@ -328,9 +333,6 @@ public:
 
     // Temporary vector stokes
     mutable LA::MPI::Vector tmpStokes;
-
-    // // Temporary vector solid
-    // mutable LA::MPI::Vector tmpStokes;
   };
 
   class PreconditionBlockTriangularNewAMG
@@ -345,22 +347,22 @@ public:
       const LA::MPI::SparseMatrix &B_,                  // A(1,0)
       const LA::MPI::SparseMatrix &D1_,                 // A(2,0)
       const LA::MPI::SparseMatrix &D2_,                 // A(2,1)
-      const LA::MPI::SparseMatrix &solid_matrix_,        // A(2,2)
-        std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_velocity_,
-    std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_pressure_,
-    std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_solid_
+      const LA::MPI::SparseMatrix &solid_matrix_,       // A(2,2)
+      std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_velocity_,
+      std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_pressure_,
+      std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_solid_
 
     )
     {
-      velocity_stiffness = &velocity_stiffness_;
-      pressure_mass      = &pressure_mass_;
-      B                  = &B_;
-      D1                 = &D1_;
-      D2                 = &D2_;
-      solid_matrix       = &solid_matrix_;
+      velocity_stiffness      = &velocity_stiffness_;
+      pressure_mass           = &pressure_mass_;
+      B                       = &B_;
+      D1                      = &D1_;
+      D2                      = &D2_;
+      solid_matrix            = &solid_matrix_;
       preconditioner_velocity = precond_velocity_;
       preconditioner_pressure = precond_pressure_;
-      preconditioner_solid = precond_solid_;
+      preconditioner_solid    = precond_solid_;
     }
 
     // Application of the preconditioner.
@@ -376,9 +378,10 @@ public:
                                dst.block(0),
                                src.block(0),
                                *preconditioner_velocity);
-      // std::cout << "  " << solver_control_velocity.last_step() << " CG1 iterations"
-      //       << std::endl;
-
+#ifdef DEBUG
+      std::cout << "  " << solver_control_velocity.last_step()
+                << " CG1 iterations" << std::endl;
+#endif
       tmpStokes.reinit(src.block(1));
       B->vmult(tmpStokes, dst.block(0));
       tmpStokes.sadd(-1.0, src.block(1));
@@ -390,9 +393,10 @@ public:
                                dst.block(1),
                                tmpStokes,
                                *preconditioner_pressure);
-      // std::cout << "  " << solver_control_pressure.last_step() << " CG2 iterations"
-      //       << std::endl;
-
+#ifdef DEBUG
+      std::cout << "  " << solver_control_pressure.last_step()
+                << " CG2 iterations" << std::endl;
+#endif
       tmpStokes.reinit(src.block(2));
       D1->vmult(tmpStokes, dst.block(0));
       D2->vmult_add(tmpStokes, dst.block(1));
@@ -410,8 +414,10 @@ public:
                             dst.block(2),
                             tmpStokes,
                             *preconditioner_solid);
-      // std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
-      //       << std::endl;
+#ifdef DEBUG
+      std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
+                << std::endl;
+#endif
     }
 
   protected:
@@ -444,25 +450,23 @@ public:
 
     // Temporary vector stokes
     mutable LA::MPI::Vector tmpStokes;
-
-    // // Temporary vector solid
-    // mutable LA::MPI::Vector tmpStokes;
   };
 
 
   // class PreconditionBlockTriangularSimple
   // {
   // public:
-  //   // Initialize the preconditioner, given the velocity stiffness matrix, the
+  //   // Initialize the preconditioner, given the velocity stiffness matrix,
+  //   the
   //   // pressure mass matrix.
   //   void
   //   initialize(
   //     const LA::MPI::SparseMatrix &velocity_stiffness_, // A(0,0)
-  //     const LA::MPI::SparseMatrix &pressure_mass_,      // pressurematrix(1,1)
-  //     const LA::MPI::SparseMatrix &B_,                  // A(1,0)
-  //     const LA::MPI::SparseMatrix &D1_,                 // A(2,0)
-  //     const LA::MPI::SparseMatrix &D2_,                 // A(2,1)
-  //     const LA::MPI::SparseMatrix &solid_matrix_        // A(2,2)
+  //     const LA::MPI::SparseMatrix &pressure_mass_,      //
+  //     pressurematrix(1,1) const LA::MPI::SparseMatrix &B_, // A(1,0) const
+  //     LA::MPI::SparseMatrix &D1_,                 // A(2,0) const
+  //     LA::MPI::SparseMatrix &D2_,                 // A(2,1) const
+  //     LA::MPI::SparseMatrix &solid_matrix_        // A(2,2)
   //   )
   //   {
   //     velocity_stiffness = &velocity_stiffness_;
@@ -615,14 +619,14 @@ private:
     std::vector<double>                  &stokes_phi_p,
     FullMatrix<double>                   &local_interface_matrix) const;
 
-  ParameterHandler &prm;
-  const int problemsize;
+  ParameterHandler  &prm;
+  const int          problemsize;
   const unsigned int stokes_degree;
   const unsigned int elasticity_degree;
 
   // Number of MPI processes.
   // parallel::fullydistributed::Triangulation<dim> triangulation; doesn't
-  // work
+  // work with GridGenerator directly
   parallel::distributed::Triangulation<dim> triangulation;
 
 
@@ -632,7 +636,6 @@ private:
   // This MPI process.
   const unsigned int mpi_rank;
 
-  // MPI_Comm           mpi_communicator;
 
 
   FESystem<dim>         elasticity_fe;
@@ -657,7 +660,7 @@ private:
 
 
   std::shared_ptr<TrilinosWrappers::PreconditionAMG> stokes_preconditioner;
-  std::shared_ptr<TrilinosWrappers::PreconditionAMG>  mp_preconditioner;
+  std::shared_ptr<TrilinosWrappers::PreconditionAMG> mp_preconditioner;
   std::shared_ptr<TrilinosWrappers::PreconditionAMG> elasticity_preconditioner;
 
 
