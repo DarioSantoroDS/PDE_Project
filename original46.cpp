@@ -290,7 +290,7 @@ namespace Step46
   void
   FluidStructureProblem<dim>::make_grid()
   {
-    GridGenerator::subdivided_hyper_cube(triangulation, 128, -1, 1);
+    GridGenerator::subdivided_hyper_cube(triangulation, 8, -1, 1);
 
     for (const auto &cell : triangulation.active_cell_iterators())
       for (const auto &face : cell->face_iterators())
@@ -1024,7 +1024,7 @@ namespace Step46
   {
     make_grid();
 
-    for (unsigned int refinement_cycle = 0; refinement_cycle < 1;
+    for (unsigned int refinement_cycle = 0; refinement_cycle < 3 + 1;
          ++refinement_cycle)
       {
         std::cout << "Refinement cycle " << refinement_cycle << std::endl;

@@ -67,7 +67,7 @@ ParameterReader::read_parameters(const std::string &parameter_file)
 
 void
 FluidStructureProblem::set_boundary_ids(
-  parallel::distributed::Triangulation<dim> &triangulation) const
+  parallel::distributed::Triangulation<dim> & /*triangulation*/) const
 {
   // for (const auto &cell : triangulation.active_cell_iterators())
   //   {
@@ -89,7 +89,7 @@ FluidStructureProblem::set_boundary_ids(
 
 void
 FluidStructureProblem::create_coarse_mesh(
-  parallel::distributed::Triangulation<dim> &coarse_grid) const
+  parallel::distributed::Triangulation<dim> & /*coarse_grid*/) const
 {
   // GridGenerator::subdivided_hyper_cube(coarse_grid, problemsize, -1, 1);
   // set_boundary_ids(coarse_grid);
@@ -103,11 +103,11 @@ void
 FluidStructureProblem::make_grid()
 {
   TimerOutput::Scope t(timer, "make_grid");
-  pcout << "Generating the mesh..." << std::endl;
-  prm.enter_subsection("Geometry");
-  const int fluid_weight = prm.get_integer("Fluid weight");
-  const int solid_weight = prm.get_integer("Solid weight");
-  prm.leave_subsection();
+  pcout << "   Generating the mesh..." << std::endl;
+  // prm.enter_subsection("Geometry");
+  // const int fluid_weight = prm.get_integer("Fluid weight");
+  // const int solid_weight = prm.get_integer("Solid weight");
+  // prm.leave_subsection();
   GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
 
   for (const auto &cell : triangulation.active_cell_iterators())
@@ -157,7 +157,6 @@ FluidStructureProblem::make_grid()
 void
 FluidStructureProblem::set_active_fe_indices()
 {
-  pcout << "Setting active fe indeces.." << std::endl;
   for (const auto &cell : dof_handler.active_cell_iterators())
     {
       if (!cell->is_locally_owned())
@@ -169,13 +168,13 @@ FluidStructureProblem::set_active_fe_indices()
       else
         Assert(false, ExcNotImplemented());
     }
-  pcout << "Done!" << std::endl;
 }
 
 void
 FluidStructureProblem::setup_dofs()
 {
-    TimerOutput::Scope t(timer, "setup_dofs");
+  TimerOutput::Scope t(timer, "setup_dofs");
+  pcout << "   Initializing dofs..." << std::endl;
 
   set_active_fe_indices();
   dof_handler.distribute_dofs(fe_collection);
@@ -186,7 +185,6 @@ FluidStructureProblem::setup_dofs()
     block_component[i] = 2;
   DoFRenumbering::component_wise(dof_handler, block_component);
 
-  pcout << "Initializing dofs..." << std::endl;
   locally_owned_dofs = dof_handler.locally_owned_dofs();
   DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 
@@ -214,12 +212,13 @@ FluidStructureProblem::setup_dofs()
                                    block_relevant_dofs,
                                    MPI_COMM_WORLD);
 
+#ifdef DEBUG
   pcout << "Locally owned" << std::endl;
   std::cout << locally_relevant_dofs.n_elements() << " locally relevant dofs."
             << mpi_rank << std::endl;
   std::cout << locally_owned_dofs.n_elements() << " locally owned dofs."
             << mpi_rank << std::endl;
-
+#endif
   constraints.clear();
   constraints.reinit(locally_relevant_dofs);
   DoFTools::make_hanging_node_constraints(dof_handler, constraints);
@@ -453,14 +452,15 @@ FluidStructureProblem::setup_dofs()
   constraints.condense(dsp_pressure);
   pressure_mass.reinit(block_owned_dofs, dsp_pressure, MPI_COMM_WORLD);
 #endif
+  pcout << "Dofs initialized!" << std::endl;
 }
 
 void
 FluidStructureProblem::assemble_system()
 {
-    TimerOutput::Scope t(timer, "assembly_system");
+  TimerOutput::Scope t(timer, "assembly_system");
 
-  pcout << "Assembling the system..." << mpi_rank << std::endl;
+  pcout << "   Assembling the system..." << std::endl;
   system_matrix = 0.0;
   system_rhs    = 0.0;
   pressure_mass = 0.0;
@@ -506,7 +506,7 @@ FluidStructureProblem::assemble_system()
   FullMatrix<double> local_matrix;
   FullMatrix<double> local_interface_matrix(elasticity_dofs_per_cell,
                                             stokes_dofs_per_cell);
-  FullMatrix<double> cell_pressure_mass_matrix;
+  // FullMatrix<double> cell_pressure_mass_matrix;
 
   Vector<double> local_rhs;
 
@@ -552,8 +552,8 @@ FluidStructureProblem::assemble_system()
                           cell->get_fe().n_dofs_per_cell());
       local_rhs.reinit(cell->get_fe().n_dofs_per_cell());
 
-      cell_pressure_mass_matrix.reinit(cell->get_fe().n_dofs_per_cell(),
-                                       cell->get_fe().n_dofs_per_cell());
+      // cell_pressure_mass_matrix.reinit(cell->get_fe().n_dofs_per_cell(),
+      //                                  cell->get_fe().n_dofs_per_cell());
       // With all of this done, we continue to assemble the cell terms for
       // cells that are part of the Stokes and elastic regions. While we
       // could in principle do this in one formula, in effect implementing
@@ -591,12 +591,12 @@ FluidStructureProblem::assemble_system()
                      stokes_div_phi_u[i] * stokes_phi_p[j] -
                      stokes_phi_p[i] * stokes_div_phi_u[j]) *
                     fe_values.JxW(q);
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                  cell_pressure_mass_matrix(i, j) +=
-                    fe_values[pressure].value(i, q) *
-                    fe_values[pressure].value(j, q) / viscosity *
-                    fe_values.JxW(q);
+              // for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              //   for (unsigned int j = 0; j < dofs_per_cell; ++j)
+              //     cell_pressure_mass_matrix(i, j) +=
+              //       fe_values[pressure].value(i, q) *
+              //       fe_values[pressure].value(j, q) / viscosity *
+              //       fe_values.JxW(q);
             }
         }
       else
@@ -639,7 +639,58 @@ FluidStructureProblem::assemble_system()
       cell->get_dof_indices(local_dof_indices);
       constraints.distribute_local_to_global(
         local_matrix, local_rhs, local_dof_indices, system_matrix, system_rhs);
-      // The more interesting part of this function is where we see about
+      std::vector<unsigned int> pressure_local_indices;
+      pressure_local_indices.reserve(cell->get_fe().n_dofs_per_cell());
+
+      for (unsigned int i = 0; i < cell->get_fe().n_dofs_per_cell(); ++i)
+        {
+          // Check if this DoF belongs to the pressure component (index 'dim')
+          const unsigned int component_index =
+            cell->get_fe().system_to_component_index(i).first;
+
+          if (component_index == dim) // Assuming dim is the pressure component
+            {
+              pressure_local_indices.push_back(i);
+            }
+        }
+
+      // 2. Resize the small structures
+      const unsigned int n_pressure_dofs = pressure_local_indices.size();
+      FullMatrix<double> tiny_pressure_matrix(n_pressure_dofs, n_pressure_dofs);
+      std::vector<types::global_dof_index> pressure_global_dof_indices(
+        n_pressure_dofs);
+
+      // 3. Fill the small matrix and indices
+      for (unsigned int i = 0; i < n_pressure_dofs; ++i)
+        {
+          // Get the original local index (e.g., 5) and map to global
+          const unsigned int original_i  = pressure_local_indices[i];
+          pressure_global_dof_indices[i] = dof_indices[original_i];
+
+          for (unsigned int j = 0; j < n_pressure_dofs; ++j)
+            {
+              const unsigned int original_j = pressure_local_indices[j];
+
+              // Compute the integral directly here
+              // (No need to compute the full matrix first)
+              double value = 0.0;
+              for (unsigned int q = 0; q < fe_values.n_quadrature_points; ++q)
+                {
+                  value += fe_values[pressure].value(original_i, q) *
+                           fe_values[pressure].value(original_j, q) /
+                           viscosity * fe_values.JxW(q);
+                }
+              tiny_pressure_matrix(i, j) = value;
+            }
+        }
+
+      // 4. Distribute ONLY the pressure part
+      // This is safe because pressure_mass ONLY has pressure rows allocated.
+      constraints.distribute_local_to_global(
+        tiny_pressure_matrix,
+        pressure_global_dof_indices,
+        pressure_mass); // The more interesting part of this functiodn is where
+                        // we see about
       // face terms along the interface between the two subdomains. To this
       // end, we first have to make sure that we only assemble them once
       // even though a loop over all faces of all cells would encounter each
@@ -762,15 +813,16 @@ FluidStructureProblem::assemble_system()
                 }
             }
 
-      pressure_mass.add(dof_indices, cell_pressure_mass_matrix);
+      // pressure_mass.add(dof_indices, cell_pressure_mass_matrix);
     }
 
   system_matrix.compress(VectorOperation::add);
   system_rhs.compress(VectorOperation::add);
   pressure_mass.compress(VectorOperation::add);
 
-  pcout << "done assembly" << std::endl;
+  pcout << "Assembly complete!" << std::endl;
 }
+
 
 void
 FluidStructureProblem::assemble_interface_term(
@@ -781,7 +833,6 @@ FluidStructureProblem::assemble_interface_term(
   std::vector<double>                  &stokes_phi_p,
   FullMatrix<double>                   &local_interface_matrix) const
 {
-  // pcout << "Assembling interface term..." << std::endl;
   Assert(stokes_fe_face_values.n_quadrature_points ==
            elasticity_fe_face_values.n_quadrature_points,
          ExcInternalError());
@@ -815,13 +866,58 @@ FluidStructureProblem::assemble_interface_term(
                stokes_phi_p[j] * normal_vector) *
               elasticity_phi[i] * stokes_fe_face_values.JxW(q));
     }
-  // pcout << "Assembly of interface term done!" << std::endl;
+}
+
+void
+FluidStructureProblem::assemble_preconditioners()
+{
+  // if (rebuild_stokes_preconditioner == false)
+  //   return;
+  TimerOutput::Scope t(timer, "assemble_preconditioners");
+
+  pcout << "   Building preconditioners..." << std::endl;
+  stokes_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  const FEValuesExtractors::Vector velocity_components(0);
+  std::vector<std::vector<bool>>   stokes_constant_modes;
+  DoFTools::extract_constant_modes(dof_handler,
+                                   stokes_fe.component_mask(
+                                     velocity_components),
+                                   stokes_constant_modes);
+  TrilinosWrappers::PreconditionAMG::AdditionalData stokes_amg_data;
+  stokes_amg_data.constant_modes = stokes_constant_modes;
+
+  stokes_amg_data.elliptic              = true;
+  stokes_amg_data.higher_order_elements = true;
+  stokes_amg_data.smoother_sweeps       = 2;
+  stokes_amg_data.aggregation_threshold = 0.02;
+  stokes_preconditioner->initialize(system_matrix.block(0, 0), stokes_amg_data);
+  mp_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  mp_preconditioner->initialize(pressure_mass.block(1, 1));
+
+  elasticity_preconditioner =
+    std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  const FEValuesExtractors::Vector elasticity_components(dim + 1);
+  std::vector<std::vector<bool>>   elasticity_constant_modes;
+  DoFTools::extract_constant_modes(dof_handler,
+                                   elasticity_fe.component_mask(
+                                     elasticity_components),
+                                   elasticity_constant_modes);
+  TrilinosWrappers::PreconditionAMG::AdditionalData elasticity_amg_data;
+  elasticity_amg_data.constant_modes = elasticity_constant_modes;
+
+  elasticity_amg_data.elliptic              = true;
+  elasticity_amg_data.higher_order_elements = true;
+  elasticity_amg_data.smoother_sweeps       = 2;
+  elasticity_amg_data.aggregation_threshold = 0.02;
+  elasticity_preconditioner->initialize(system_matrix.block(2, 2),
+                                        elasticity_amg_data);
+  // rebuild_stokes_preconditioner = false;
+  pcout << "Preconditioners assembled!" << std::endl;
 }
 #ifdef DEBUG
 void
 FluidStructureProblem::output_matrix() const
 {
-
 #  ifdef USE_PETSC_LA
   PetscViewer mat_viewer;
   // Create an ASCII viewer that writes to "system_matrix.m"
@@ -854,7 +950,7 @@ FluidStructureProblem::output_matrix() const
 void
 FluidStructureProblem::solve()
 {
-      TimerOutput::Scope t(timer, "solve");
+  TimerOutput::Scope t(timer, "solve");
 
   pcout << "solvingthissutff" << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
@@ -878,22 +974,31 @@ FluidStructureProblem::solve()
 void
 FluidStructureProblem::solve_iterative()
 {
-      TimerOutput::Scope t(timer, "solve_iterative");
+  TimerOutput::Scope t(timer, "solve_iterative");
 
-  pcout << "solvingthissutff iterative" << std::endl;
+  pcout << "   Solving iterative..." << std::endl;
   LA::MPI::BlockVector completely_distributed_solution(block_owned_dofs,
                                                        MPI_COMM_WORLD);
   // completely_distributed_solution = 1.0;
   SolverControl solver_control(100000, 1e-6 * system_rhs.l2_norm());
 #  ifdef FORCE_USE_OF_TRILINOS
 
-  PreconditionBlockTriangular preconditioner;
+  PreconditionBlockTriangularNewAMG preconditioner;
+  // preconditioner.initialize(system_matrix.block(0, 0),
+  //                           pressure_mass.block(1, 1),
+  //                           system_matrix.block(1, 0),
+  //                           system_matrix.block(2, 0),
+  //                           system_matrix.block(2, 1),
+  //                           system_matrix.block(2, 2));
   preconditioner.initialize(system_matrix.block(0, 0),
                             pressure_mass.block(1, 1),
                             system_matrix.block(1, 0),
                             system_matrix.block(2, 0),
                             system_matrix.block(2, 1),
-                            system_matrix.block(2, 2));
+                            system_matrix.block(2, 2),
+                            stokes_preconditioner,
+                            mp_preconditioner,
+                            elasticity_preconditioner);
   SolverFGMRES<TrilinosWrappers::MPI::BlockVector> solver(solver_control);
   solver.solve(system_matrix,
                completely_distributed_solution,
@@ -925,8 +1030,7 @@ FluidStructureProblem::solve_iterative()
 void
 FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
 {
-
-  std::cout << "Writing output..." << std::endl;
+  pcout << "   Output results..." << std::endl;
   std::vector<std::string> solution_names(dim, "velocity");
   solution_names.emplace_back("pressure");
   for (unsigned int d = 0; d < dim; ++d)
@@ -969,15 +1073,16 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
 
   data_out.write_vtu_with_pvtu_record(
     "./", "solution", refinement_cycle, MPI_COMM_WORLD, 2, 8);
-  pcout << "   Written solution_" << refinement_cycle << ".pvtu" << std::endl;
+  pcout << "Done!" << std::endl;
+  pcout << "   Written solution_0" << refinement_cycle << ".pvtu" << std::endl;
 }
 
 void
-FluidStructureProblem::refine_mesh()
+FluidStructureProblem::refine_mesh(const unsigned int n_cycle)
 {
-      TimerOutput::Scope t(timer, "refining");
+  TimerOutput::Scope t(timer, "refining");
 
-  pcout << "Refining mesh..." << std::endl;
+  pcout << "   Refining mesh, cycle number " << n_cycle << std::endl;
 
   Vector<float> stokes_estimated_error_per_cell(triangulation.n_active_cells());
   Vector<float> elasticity_estimated_error_per_cell(
@@ -1038,25 +1143,25 @@ FluidStructureProblem::refine_mesh()
   // introduction. The results are then added together into a vector that
   // contains error indicators for all cells:
   // TODO Commented because of l2 norm may not work corectly
-  double stokes_local_sum = 0.0;
+  float stokes_local_sum = 0.0;
 
   for (unsigned int i = 0; i < stokes_estimated_error_per_cell.size(); ++i)
     stokes_local_sum +=
       stokes_estimated_error_per_cell[i] * stokes_estimated_error_per_cell[i];
-  const double stokes_global_sum =
+  const float stokes_global_sum =
     Utilities::MPI::sum(stokes_local_sum, MPI_COMM_WORLD);
-  const double stokes_l2_norm = std::sqrt(stokes_global_sum);
+  const float stokes_l2_norm = std::sqrt(stokes_global_sum);
 
-  double elasticity_local_sum = 0.0;
+  float elasticity_local_sum = 0.0;
   for (unsigned int i = 0; i < elasticity_estimated_error_per_cell.size(); ++i)
     elasticity_local_sum += elasticity_estimated_error_per_cell[i] *
                             elasticity_estimated_error_per_cell[i];
-  const double elasticity_global_sum =
+  const float elasticity_global_sum =
     Utilities::MPI::sum(elasticity_local_sum, MPI_COMM_WORLD);
-  const double elasticity_l2_norm = std::sqrt(elasticity_global_sum);
+  const float elasticity_l2_norm = std::sqrt(elasticity_global_sum);
 
-  stokes_estimated_error_per_cell *= 4. / stokes_l2_norm;
-  elasticity_estimated_error_per_cell *= 1. / elasticity_l2_norm;
+  stokes_estimated_error_per_cell *= 4.0f / stokes_l2_norm;
+  elasticity_estimated_error_per_cell *= 1.0f / elasticity_l2_norm;
 
   Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
 
@@ -1124,23 +1229,7 @@ FluidStructureProblem::refine_mesh()
     triangulation, estimated_error_per_cell, 0.3, 0.0);
   triangulation.execute_coarsening_and_refinement();
 
-  //  for (const auto &cell : triangulation.active_cell_iterators())
-  // {
-  //     for (const auto &face : cell->face_iterators())
-  //         if (face->at_boundary() && (face->center()[dim - 1] == 1))
-  //         face->set_all_boundary_ids(1);
-  // }
-
-  //  for (const auto &cell : triangulation.active_cell_iterators())
-  // {
-  //     if (((std::fabs(cell->center()[0]) < 0.25) &&
-  //          (cell->center()[dim - 1] > 0.5)) ||
-  //         ((std::fabs(cell->center()[0]) >= 0.25) &&
-  //          (cell->center()[dim - 1] > -0.5)))
-  //         cell->set_material_id(fluid_domain_id);
-  //     else
-  //         cell->set_material_id(solid_domain_id);
-  // }
-
   pcout << "Refinement done!" << std::endl;
+  pcout << "  Number of elements = " << triangulation.n_global_active_cells()
+        << std::endl;
 }

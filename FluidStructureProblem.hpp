@@ -155,6 +155,8 @@ public:
   setup_dofs();
   void
   assemble_system();
+  void
+  assemble_preconditioners();
 #ifdef DIRECT_SOLVER
   void
   solve();
@@ -170,7 +172,7 @@ public:
   output_matrix() const;
 #endif
   void
-  refine_mesh();
+  refine_mesh(const unsigned int n_cycle);
 
 
 
@@ -250,7 +252,7 @@ public:
     vmult(TrilinosWrappers::MPI::BlockVector       &dst,
           const TrilinosWrappers::MPI::BlockVector &src) const
     {
-      SolverControl              solver_control_velocity(1000,
+      SolverControl                           solver_control_velocity(1000,
                                             1e-2 * src.block(0).l2_norm());
       SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_velocity(
         solver_control_velocity);
@@ -258,10 +260,10 @@ public:
                                dst.block(0),
                                src.block(0),
                                preconditioner_velocity);
-      // std::cout << "  " << solver_control_velocity.last_step() << " CG1
-      // iterations"
-      //       << std::endl;
-
+#ifdef DEBUG
+      std::cout << "  " << solver_control_velocity.last_step()
+                << " CG1 iterations" << std::endl;
+#endif
       tmpStokes.reinit(src.block(1));
       B->vmult(tmpStokes, dst.block(0));
       tmpStokes.sadd(-1.0, src.block(1));
@@ -273,9 +275,10 @@ public:
                                dst.block(1),
                                tmpStokes,
                                preconditioner_pressure);
-      // std::cout << "  " << solver_control_pressure.last_step() << " CG2
-      // iterations"
-      //       << std::endl;
+#ifdef DEBUG
+      std::cout << "  " << solver_control_pressure.last_step()
+                << " CG2 iterations" << std::endl;
+#endif
 
       tmpStokes.reinit(src.block(2));
       D1->vmult(tmpStokes, dst.block(0));
@@ -294,9 +297,10 @@ public:
                             dst.block(2),
                             tmpStokes,
                             preconditioner_solid);
-      // std::cout << "  " << solver_control_solid.last_step() << " CG3
-      // iterations"
-      //       << std::endl;
+#ifdef DEBUG
+      std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
+                << std::endl;
+#endif
     }
 
   protected:
@@ -329,12 +333,9 @@ public:
 
     // Temporary vector stokes
     mutable LA::MPI::Vector tmpStokes;
-
-    // // Temporary vector solid
-    // mutable LA::MPI::Vector tmpStokes;
   };
 
-  class PreconditionBlockTriangularSimple
+  class PreconditionBlockTriangularNewAMG
   {
   public:
     // Initialize the preconditioner, given the velocity stiffness matrix, the
@@ -346,25 +347,22 @@ public:
       const LA::MPI::SparseMatrix &B_,                  // A(1,0)
       const LA::MPI::SparseMatrix &D1_,                 // A(2,0)
       const LA::MPI::SparseMatrix &D2_,                 // A(2,1)
-      const LA::MPI::SparseMatrix &solid_matrix_        // A(2,2)
+      const LA::MPI::SparseMatrix &solid_matrix_,       // A(2,2)
+      std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_velocity_,
+      std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_pressure_,
+      std::shared_ptr<TrilinosWrappers::PreconditionAMG> precond_solid_
+
     )
     {
-      velocity_stiffness = &velocity_stiffness_;
-      pressure_mass      = &pressure_mass_;
-      B                  = &B_;
-      D1                 = &D1_;
-      D2                 = &D2_;
-      solid_matrix       = &solid_matrix_;
-
-      preconditioner_velocity.initialize(velocity_stiffness_);
-      preconditioner_pressure.initialize(pressure_mass_);
-      preconditioner_solid.initialize(
-        solid_matrix_
-        // , TrilinosWrappers::PreconditionSSOR::AdditionalData(
-        //   1.0
-        //   // , 1 //i dont think is useful this
-        //   )
-      );
+      velocity_stiffness      = &velocity_stiffness_;
+      pressure_mass           = &pressure_mass_;
+      B                       = &B_;
+      D1                      = &D1_;
+      D2                      = &D2_;
+      solid_matrix            = &solid_matrix_;
+      preconditioner_velocity = precond_velocity_;
+      preconditioner_pressure = precond_pressure_;
+      preconditioner_solid    = precond_solid_;
     }
 
     // Application of the preconditioner.
@@ -372,83 +370,68 @@ public:
     vmult(TrilinosWrappers::MPI::BlockVector       &dst,
           const TrilinosWrappers::MPI::BlockVector &src) const
     {
-      //--------------- SIMPLE velocity prediction: u* = A^{-1} rhs_u
-      //---------------
-      SolverControl solver_control_u(1000, 1e-2 * src.block(0).l2_norm());
-      SolverCG<TrilinosWrappers::MPI::Vector> solver_u(solver_control_u);
-
-      solver_u.solve(*velocity_stiffness,
-                     dst.block(0),
-                     src.block(0),
-                     preconditioner_velocity);
-
-      // u* is now stored in dst.block(0)
-
-      //--------------- Compute pressure rhs: g = B u* - rhs_p
-      //----------------------
+      SolverControl                           solver_control_velocity(1000,
+                                            1e-2 * src.block(0).l2_norm());
+      SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_velocity(
+        solver_control_velocity);
+      solver_cg_velocity.solve(*velocity_stiffness,
+                               dst.block(0),
+                               src.block(0),
+                               *preconditioner_velocity);
+#ifdef DEBUG
+      std::cout << "  " << solver_control_velocity.last_step()
+                << " CG1 iterations" << std::endl;
+#endif
       tmpStokes.reinit(src.block(1));
-      B->vmult(tmpStokes, dst.block(0));  // tmpStokes = B*u*
-      tmpStokes.sadd(-1.0, src.block(1)); // tmpStokes = B*u* - rhs_p
+      B->vmult(tmpStokes, dst.block(0));
+      tmpStokes.sadd(-1.0, src.block(1));
 
-      //--------------- SIMPLE Schur complement solve: p = S^{-1} g
-      //-----------------
-      // We approximate S^{-1} ≈ (pressure_mass)^{-1}
-      SolverControl solver_control_S(1000, 1e-2 * tmpStokes.l2_norm());
-      SolverCG<TrilinosWrappers::MPI::Vector> solver_S(solver_control_S);
-
-      solver_S.solve(*pressure_mass,
-                     dst.block(1),
-                     tmpStokes,
-                     preconditioner_pressure);
-
-      // dst.block(1) = p
-
-      //--------------- SIMPLE velocity correction: u = u* - A^{-1} B^T p
-      //-----------
-      tmpStokes.reinit(src.block(0));
-      B->Tvmult(tmpStokes, dst.block(1)); // tmpStokes = B^T p
-
-      TrilinosWrappers::MPI::Vector AuInv(tmpStokes);
-      SolverControl solver_control_Acorr(1000, 1e-2 * tmpStokes.l2_norm());
-      SolverCG<TrilinosWrappers::MPI::Vector> solver_Acorr(
-        solver_control_Acorr);
-
-      solver_Acorr.solve(*velocity_stiffness,
-                         AuInv,
-                         tmpStokes,
-                         preconditioner_velocity);
-
-      dst.block(0).sadd(1.0, -1.0, AuInv); // u = u* − A^{-1} B^T p
-
-      //--------------- Solid block stays unchanged
-      //---------------------------------
+      SolverControl solver_control_pressure(1000, 1e-2 * tmpStokes.l2_norm());
+      SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_pressure(
+        solver_control_pressure);
+      solver_cg_pressure.solve(*pressure_mass,
+                               dst.block(1),
+                               tmpStokes,
+                               *preconditioner_pressure);
+#ifdef DEBUG
+      std::cout << "  " << solver_control_pressure.last_step()
+                << " CG2 iterations" << std::endl;
+#endif
       tmpStokes.reinit(src.block(2));
       D1->vmult(tmpStokes, dst.block(0));
       D2->vmult_add(tmpStokes, dst.block(1));
       tmpStokes.sadd(-1.0, src.block(2));
+
+
+
+      // preconditioner_solid.vmult(dst.block(2), tmpStokes);
+
       SolverControl solver_control_solid(1000, 1e-2 * tmpStokes.l2_norm());
-      SolverCG<TrilinosWrappers::MPI::Vector> solver_solid(
+      SolverCG<TrilinosWrappers::MPI::Vector> solver_cg_solid(
         solver_control_solid);
 
-      solver_solid.solve(*solid_matrix,
-                         dst.block(2),
-                         tmpStokes,
-                         preconditioner_solid);
+      solver_cg_solid.solve(*solid_matrix,
+                            dst.block(2),
+                            tmpStokes,
+                            *preconditioner_solid);
+#ifdef DEBUG
+      std::cout << "  " << solver_control_solid.last_step() << " CG3 iterations"
+                << std::endl;
+#endif
     }
-
 
   protected:
     // Velocity stiffness matrix.
     const LA::MPI::SparseMatrix *velocity_stiffness;
 
     // Preconditioner used for the velocity block.
-    TrilinosWrappers::PreconditionAMG preconditioner_velocity;
+    std::shared_ptr<TrilinosWrappers::PreconditionAMG> preconditioner_velocity;
 
     // Pressure mass matrix.
     const LA::MPI::SparseMatrix *pressure_mass;
 
     // Preconditioner used for the pressure block.
-    TrilinosWrappers::PreconditionAMG preconditioner_pressure;
+    std::shared_ptr<TrilinosWrappers::PreconditionAMG> preconditioner_pressure;
 
     // B matrix.
     const LA::MPI::SparseMatrix *B;
@@ -460,7 +443,7 @@ public:
     const LA::MPI::SparseMatrix *D2;
 
     // Preconditioner used for the pressure block.
-    TrilinosWrappers::PreconditionAMG preconditioner_solid;
+    std::shared_ptr<TrilinosWrappers::PreconditionAMG> preconditioner_solid;
 
     // Solid matrix.
     const LA::MPI::SparseMatrix *solid_matrix;
@@ -468,6 +451,143 @@ public:
     // Temporary vector stokes
     mutable LA::MPI::Vector tmpStokes;
   };
+
+
+  // class PreconditionBlockTriangularSimple
+  // {
+  // public:
+  //   // Initialize the preconditioner, given the velocity stiffness matrix,
+  //   the
+  //   // pressure mass matrix.
+  //   void
+  //   initialize(
+  //     const LA::MPI::SparseMatrix &velocity_stiffness_, // A(0,0)
+  //     const LA::MPI::SparseMatrix &pressure_mass_,      //
+  //     pressurematrix(1,1) const LA::MPI::SparseMatrix &B_, // A(1,0) const
+  //     LA::MPI::SparseMatrix &D1_,                 // A(2,0) const
+  //     LA::MPI::SparseMatrix &D2_,                 // A(2,1) const
+  //     LA::MPI::SparseMatrix &solid_matrix_        // A(2,2)
+  //   )
+  //   {
+  //     velocity_stiffness = &velocity_stiffness_;
+  //     pressure_mass      = &pressure_mass_;
+  //     B                  = &B_;
+  //     D1                 = &D1_;
+  //     D2                 = &D2_;
+  //     solid_matrix       = &solid_matrix_;
+
+  //     preconditioner_velocity.initialize(velocity_stiffness_);
+  //     preconditioner_pressure.initialize(pressure_mass_);
+  //     preconditioner_solid.initialize(
+  //       solid_matrix_
+  //       // , TrilinosWrappers::PreconditionSSOR::AdditionalData(
+  //       //   1.0
+  //       //   // , 1 //i dont think is useful this
+  //       //   )
+  //     );
+  //   }
+
+  //   // Application of the preconditioner.
+  //   void
+  //   vmult(TrilinosWrappers::MPI::BlockVector       &dst,
+  //         const TrilinosWrappers::MPI::BlockVector &src) const
+  //   {
+  //     //--------------- SIMPLE velocity prediction: u* = A^{-1} rhs_u
+  //     //---------------
+  //     SolverControl solver_control_u(1000, 1e-2 * src.block(0).l2_norm());
+  //     SolverCG<TrilinosWrappers::MPI::Vector> solver_u(solver_control_u);
+
+  //     solver_u.solve(*velocity_stiffness,
+  //                    dst.block(0),
+  //                    src.block(0),
+  //                    preconditioner_velocity);
+
+  //     // u* is now stored in dst.block(0)
+
+  //     //--------------- Compute pressure rhs: g = B u* - rhs_p
+  //     //----------------------
+  //     tmpStokes.reinit(src.block(1));
+  //     B->vmult(tmpStokes, dst.block(0));  // tmpStokes = B*u*
+  //     tmpStokes.sadd(-1.0, src.block(1)); // tmpStokes = B*u* - rhs_p
+
+  //     //--------------- SIMPLE Schur complement solve: p = S^{-1} g
+  //     //-----------------
+  //     // We approximate S^{-1} ≈ (pressure_mass)^{-1}
+  //     SolverControl solver_control_S(1000, 1e-2 * tmpStokes.l2_norm());
+  //     SolverCG<TrilinosWrappers::MPI::Vector> solver_S(solver_control_S);
+
+  //     solver_S.solve(*pressure_mass,
+  //                    dst.block(1),
+  //                    tmpStokes,
+  //                    preconditioner_pressure);
+
+  //     // dst.block(1) = p
+
+  //     //--------------- SIMPLE velocity correction: u = u* - A^{-1} B^T p
+  //     //-----------
+  //     tmpStokes.reinit(src.block(0));
+  //     B->Tvmult(tmpStokes, dst.block(1)); // tmpStokes = B^T p
+
+  //     TrilinosWrappers::MPI::Vector AuInv(tmpStokes);
+  //     SolverControl solver_control_Acorr(1000, 1e-2 * tmpStokes.l2_norm());
+  //     SolverCG<TrilinosWrappers::MPI::Vector> solver_Acorr(
+  //       solver_control_Acorr);
+
+  //     solver_Acorr.solve(*velocity_stiffness,
+  //                        AuInv,
+  //                        tmpStokes,
+  //                        preconditioner_velocity);
+
+  //     dst.block(0).sadd(1.0, -1.0, AuInv); // u = u* − A^{-1} B^T p
+
+  //     //--------------- Solid block stays unchanged
+  //     //---------------------------------
+  //     tmpStokes.reinit(src.block(2));
+  //     D1->vmult(tmpStokes, dst.block(0));
+  //     D2->vmult_add(tmpStokes, dst.block(1));
+  //     tmpStokes.sadd(-1.0, src.block(2));
+  //     SolverControl solver_control_solid(1000, 1e-2 * tmpStokes.l2_norm());
+  //     SolverCG<TrilinosWrappers::MPI::Vector> solver_solid(
+  //       solver_control_solid);
+
+  //     solver_solid.solve(*solid_matrix,
+  //                        dst.block(2),
+  //                        tmpStokes,
+  //                        preconditioner_solid);
+  //   }
+
+
+  // protected:
+  //   // Velocity stiffness matrix.
+  //   const LA::MPI::SparseMatrix *velocity_stiffness;
+
+  //   // Preconditioner used for the velocity block.
+  //   TrilinosWrappers::PreconditionAMG preconditioner_velocity;
+
+  //   // Pressure mass matrix.
+  //   const LA::MPI::SparseMatrix *pressure_mass;
+
+  //   // Preconditioner used for the pressure block.
+  //   TrilinosWrappers::PreconditionAMG preconditioner_pressure;
+
+  //   // B matrix.
+  //   const LA::MPI::SparseMatrix *B;
+
+  //   // D1 matrix.
+  //   const LA::MPI::SparseMatrix *D1;
+
+  //   // D2 matrix.
+  //   const LA::MPI::SparseMatrix *D2;
+
+  //   // Preconditioner used for the pressure block.
+  //   TrilinosWrappers::PreconditionAMG preconditioner_solid;
+
+  //   // Solid matrix.
+  //   const LA::MPI::SparseMatrix *solid_matrix;
+
+  //   // Temporary vector stokes
+  //   mutable LA::MPI::Vector tmpStokes;
+  // };
 
 private:
   enum
@@ -498,13 +618,15 @@ private:
     std::vector<SymmetricTensor<2, dim>> &stokes_symgrad_phi_u,
     std::vector<double>                  &stokes_phi_p,
     FullMatrix<double>                   &local_interface_matrix) const;
+
+  ParameterHandler  &prm;
+  const int          problemsize;
   const unsigned int stokes_degree;
   const unsigned int elasticity_degree;
-  ParameterHandler  &prm;
 
   // Number of MPI processes.
   // parallel::fullydistributed::Triangulation<dim> triangulation; doesn't
-  // work
+  // work with GridGenerator directly
   parallel::distributed::Triangulation<dim> triangulation;
 
 
@@ -514,7 +636,6 @@ private:
   // This MPI process.
   const unsigned int mpi_rank;
 
-  // MPI_Comm           mpi_communicator;
 
 
   FESystem<dim>         elasticity_fe;
@@ -530,13 +651,18 @@ public:
 
 private:
   AffineConstraints<double>  constraints;
-  const int                  problemsize;
   SparsityPattern            sparsity_pattern;
   LA::MPI::BlockSparseMatrix system_matrix;
   LA::MPI::BlockSparseMatrix pressure_mass;
   LA::MPI::BlockVector       solution;
   LA::MPI::BlockVector       locally_relevant_solution;
   LA::MPI::BlockVector       system_rhs;
+
+
+  std::shared_ptr<TrilinosWrappers::PreconditionAMG> stokes_preconditioner;
+  std::shared_ptr<TrilinosWrappers::PreconditionAMG> mp_preconditioner;
+  std::shared_ptr<TrilinosWrappers::PreconditionAMG> elasticity_preconditioner;
+
 
   IndexSet              locally_owned_dofs;
   IndexSet              locally_relevant_dofs;
