@@ -36,7 +36,7 @@ ParameterReader::declare_parameters()
   {
     prm.declare_entry("Refinement cycles",
                       "1", // Default value in file
-                      Patterns::Integer(1),
+                      Patterns::Integer(0),
                       "Number of refinement cycles to be performed");
   }
   prm.leave_subsection();
@@ -1014,7 +1014,7 @@ FluidStructureProblem::solve_iterative()
                completely_distributed_solution,
                system_rhs,
                preconditioner);
-  pcout << "  " << solver_control.last_step() << " GMRES iterations"
+  pcout << "  " << solver_control.last_step() << " FGMRES iterations"
         << std::endl;
 #  else
   Assert(false, ExcNotImplemented());
