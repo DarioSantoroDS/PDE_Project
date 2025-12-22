@@ -51,7 +51,9 @@ FluidStructureProblem::make_grid()
   const int fluid_weight = prm.get_integer("Fluid weight");
     const int solid_weight = prm.get_integer("Solid weight");
   prm.leave_subsection();
-  GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
+  GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1, true);
+  // FACCIA SINISTRA: ID = 3 DA CONTRLLARE
+  // FACCIA DESTRA: ID = 1 DA CONTROLLARE
 
   for (const auto &cell : triangulation.active_cell_iterators())
     {
