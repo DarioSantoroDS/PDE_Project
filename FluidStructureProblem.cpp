@@ -67,7 +67,7 @@ ParameterReader::read_parameters(const std::string &parameter_file)
 
 void
 FluidStructureProblem::set_boundary_ids(
-  parallel::distributed::Triangulation<dim> &triangulation) const
+  parallel::distributed::Triangulation<dim> &/*triangulation*/) const
 {
   // for (const auto &cell : triangulation.active_cell_iterators())
   //   {
@@ -89,7 +89,7 @@ FluidStructureProblem::set_boundary_ids(
 
 void
 FluidStructureProblem::create_coarse_mesh(
-  parallel::distributed::Triangulation<dim> &coarse_grid) const
+  parallel::distributed::Triangulation<dim> &/*coarse_grid*/) const
 {
   // GridGenerator::subdivided_hyper_cube(coarse_grid, problemsize, -1, 1);
   // set_boundary_ids(coarse_grid);
@@ -104,10 +104,10 @@ FluidStructureProblem::make_grid()
 {
   TimerOutput::Scope t(timer, "make_grid");
   pcout << "Generating the mesh..." << std::endl;
-  prm.enter_subsection("Geometry");
-  const int fluid_weight = prm.get_integer("Fluid weight");
-  const int solid_weight = prm.get_integer("Solid weight");
-  prm.leave_subsection();
+  // prm.enter_subsection("Geometry");
+  // const int fluid_weight = prm.get_integer("Fluid weight");
+  // const int solid_weight = prm.get_integer("Solid weight");
+  // prm.leave_subsection();
   GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
 
   for (const auto &cell : triangulation.active_cell_iterators())
@@ -772,6 +772,7 @@ FluidStructureProblem::assemble_system()
   pcout << "done assembly" << std::endl;
 }
 
+
 void
 FluidStructureProblem::assemble_interface_term(
   const FEFaceValuesBase<dim>          &elasticity_fe_face_values,
@@ -816,6 +817,95 @@ FluidStructureProblem::assemble_interface_term(
               elasticity_phi[i] * stokes_fe_face_values.JxW(q));
     }
   // pcout << "Assembly of interface term done!" << std::endl;
+}
+
+void
+FluidStructureProblem::assemble_preconditioners()
+{
+    // if (rebuild_stokes_preconditioner == false)
+    //   return;
+ 
+    pcout << "   Building Stokes preconditioner..." << std::endl;
+// { 
+//     const QGauss<dim> quadrature_formula(stokes_degree + 2);
+//     FEValues<dim>     stokes_fe_values(stokes_fe,
+//                                    quadrature_formula,
+//                                    update_JxW_values | update_values |
+//                                      update_gradients);
+ 
+//     const unsigned int dofs_per_cell = stokes_fe.n_dofs_per_cell();
+//     const unsigned int n_q_points    = quadrature_formula.size();
+ 
+//     FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
+//     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+ 
+//     std::vector<Tensor<2, dim>> grad_phi_u(dofs_per_cell);
+//     std::vector<double>         phi_p(dofs_per_cell);
+ 
+//     const FEValuesExtractors::Vector velocities(0);
+//     const FEValuesExtractors::Scalar pressure(dim);
+ 
+//     for (const auto &cell : stokes_dof_handler.active_cell_iterators())
+//       {
+//         stokes_fe_values.reinit(cell);
+//         local_matrix = 0;
+ 
+//         for (unsigned int q = 0; q < n_q_points; ++q)
+//           {
+//             for (unsigned int k = 0; k < dofs_per_cell; ++k)
+//               {
+//                 grad_phi_u[k] = stokes_fe_values[velocities].gradient(k, q);
+//                 phi_p[k]      = stokes_fe_values[pressure].value(k, q);
+//               }
+ 
+//             for (unsigned int i = 0; i < dofs_per_cell; ++i)
+//               for (unsigned int j = 0; j < dofs_per_cell; ++j)
+//                 local_matrix(i, j) +=
+//                   (EquationData::eta *
+//                      scalar_product(grad_phi_u[i], grad_phi_u[j]) +
+//                    (1. / EquationData::eta) * phi_p[i] * phi_p[j]) *
+//                   stokes_fe_values.JxW(q);
+//           }
+ 
+//         cell->get_dof_indices(local_dof_indices);
+//         stokes_constraints.distribute_local_to_global(
+//           local_matrix, local_dof_indices, stokes_preconditioner_matrix);
+//       }
+//   }
+    stokes_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+    const FEValuesExtractors::Vector     velocity_components(0);
+     std::vector<std::vector<bool>> stokes_constant_modes;
+    DoFTools::extract_constant_modes(dof_handler,
+                                     stokes_fe.component_mask(
+                                       velocity_components),
+                                     stokes_constant_modes);
+    TrilinosWrappers::PreconditionAMG::AdditionalData stokes_amg_data;
+    stokes_amg_data.constant_modes = stokes_constant_modes;
+ 
+    stokes_amg_data.elliptic              = true;
+    stokes_amg_data.higher_order_elements = true;
+    stokes_amg_data.smoother_sweeps       = 2;
+    stokes_amg_data.aggregation_threshold = 0.02;
+    stokes_preconditioner->initialize( system_matrix.block(0, 0),
+                                   stokes_amg_data);
+    mp_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+    mp_preconditioner->initialize(pressure_mass.block(1, 1));
+
+  elasticity_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+    const FEValuesExtractors::Vector     elasticity_components(dim + 1);
+     std::vector<std::vector<bool>> elasticity_constant_modes;
+      DoFTools::extract_constant_modes(
+        dof_handler, elasticity_fe.component_mask(elasticity_components),elasticity_constant_modes);
+    TrilinosWrappers::PreconditionAMG::AdditionalData elasticity_amg_data;
+    elasticity_amg_data.constant_modes = elasticity_constant_modes;
+ 
+    elasticity_amg_data.elliptic              = true;
+    elasticity_amg_data.higher_order_elements = true;
+    elasticity_amg_data.smoother_sweeps       = 2;
+    elasticity_amg_data.aggregation_threshold = 0.02;
+    elasticity_preconditioner->initialize( system_matrix.block(2, 2),
+                                   elasticity_amg_data);
+    // rebuild_stokes_preconditioner = false;
 }
 #ifdef DEBUG
 void
@@ -887,13 +977,22 @@ FluidStructureProblem::solve_iterative()
   SolverControl solver_control(100000, 1e-6 * system_rhs.l2_norm());
 #  ifdef FORCE_USE_OF_TRILINOS
 
-  PreconditionBlockTriangular preconditioner;
+  PreconditionBlockTriangularNewAMG preconditioner;
+  // preconditioner.initialize(system_matrix.block(0, 0),
+  //                           pressure_mass.block(1, 1),
+  //                           system_matrix.block(1, 0),
+  //                           system_matrix.block(2, 0),
+  //                           system_matrix.block(2, 1),
+  //                           system_matrix.block(2, 2));
   preconditioner.initialize(system_matrix.block(0, 0),
                             pressure_mass.block(1, 1),
                             system_matrix.block(1, 0),
                             system_matrix.block(2, 0),
                             system_matrix.block(2, 1),
-                            system_matrix.block(2, 2));
+                            system_matrix.block(2, 2),
+                            stokes_preconditioner,
+                            mp_preconditioner,
+                            elasticity_preconditioner);
   SolverFGMRES<TrilinosWrappers::MPI::BlockVector> solver(solver_control);
   solver.solve(system_matrix,
                completely_distributed_solution,
@@ -1038,25 +1137,25 @@ FluidStructureProblem::refine_mesh()
   // introduction. The results are then added together into a vector that
   // contains error indicators for all cells:
   // TODO Commented because of l2 norm may not work corectly
-  double stokes_local_sum = 0.0;
+  float stokes_local_sum = 0.0;
 
   for (unsigned int i = 0; i < stokes_estimated_error_per_cell.size(); ++i)
     stokes_local_sum +=
       stokes_estimated_error_per_cell[i] * stokes_estimated_error_per_cell[i];
-  const double stokes_global_sum =
+  const float stokes_global_sum =
     Utilities::MPI::sum(stokes_local_sum, MPI_COMM_WORLD);
-  const double stokes_l2_norm = std::sqrt(stokes_global_sum);
+  const float stokes_l2_norm = std::sqrt(stokes_global_sum);
 
-  double elasticity_local_sum = 0.0;
+  float elasticity_local_sum = 0.0;
   for (unsigned int i = 0; i < elasticity_estimated_error_per_cell.size(); ++i)
     elasticity_local_sum += elasticity_estimated_error_per_cell[i] *
                             elasticity_estimated_error_per_cell[i];
-  const double elasticity_global_sum =
+  const float elasticity_global_sum =
     Utilities::MPI::sum(elasticity_local_sum, MPI_COMM_WORLD);
-  const double elasticity_l2_norm = std::sqrt(elasticity_global_sum);
+  const float elasticity_l2_norm = std::sqrt(elasticity_global_sum);
 
-  stokes_estimated_error_per_cell *= 4. / stokes_l2_norm;
-  elasticity_estimated_error_per_cell *= 1. / elasticity_l2_norm;
+  stokes_estimated_error_per_cell *= 4.0f / stokes_l2_norm;
+  elasticity_estimated_error_per_cell *= 1.0f / elasticity_l2_norm;
 
   Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
 
@@ -1143,4 +1242,6 @@ FluidStructureProblem::refine_mesh()
   // }
 
   pcout << "Refinement done!" << std::endl;
+  pcout << "  Number of elements = " << triangulation.n_global_active_cells()
+        << std::endl;
 }

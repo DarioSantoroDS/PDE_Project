@@ -36,6 +36,7 @@ main(int argc, char *argv[])
 
       flow_problem.pcout << "   Assembling..." << std::endl;
       flow_problem.assemble_system();
+      flow_problem.assemble_preconditioners();
 #ifdef DEBUG
       flow_problem.output_matrix();
 #endif

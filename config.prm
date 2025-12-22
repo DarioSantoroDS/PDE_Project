@@ -7,7 +7,7 @@ subsection Geometry
 end
 
 subsection Refinement
-  set Refinement cycles = 4
+  set Refinement cycles = 2
 end
 
 subsection Physics
