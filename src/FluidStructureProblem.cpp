@@ -149,7 +149,9 @@ FluidStructureProblem::make_grid()
 
   // // 4. Force a repartition now that weights and IDs are defined
   // triangulation.repartition();
+#ifdef VERBOSE
   pcout << "Mesh generated!" << std::endl;
+#endif
   pcout << "  Number of elements = " << triangulation.n_global_active_cells()
         << std::endl;
 }
@@ -203,11 +205,14 @@ FluidStructureProblem::setup_dofs()
   block_relevant_dofs[1] = locally_relevant_dofs.get_view(n_u, n_u + n_p);
   block_relevant_dofs[2] =
     locally_relevant_dofs.get_view(n_u + n_p, n_u + n_p + n_d);
+#ifdef VERBOSE
   pcout << "  Number of DoFs: " << std::endl;
   pcout << "    velocity = " << n_u << std::endl;
   pcout << "    pressure = " << n_p << std::endl;
   pcout << "    displacement = " << n_d << std::endl;
+#endif
   pcout << "    total    = " << n_u + n_p + n_d << std::endl;
+
   locally_relevant_solution.reinit(block_owned_dofs,
                                    block_relevant_dofs,
                                    MPI_COMM_WORLD);
@@ -299,12 +304,12 @@ FluidStructureProblem::setup_dofs()
   // constraints.is_consistent_in_parallel(locally_test,active_test,MPI_COMM_WORLD,true);
   // std::cout<< is_this_consistent << std::endl;
   constraints.close();
-
+#ifdef VERBOSE
   pcout << "   Number of active cells: " << triangulation.n_active_cells()
         << std::endl
         << "   Number of degrees of freedom: " << dof_handler.n_dofs()
         << std::endl;
-
+#endif
   // In the rest of this function we create a sparsity pattern as discussed
   // extensively in the introduction, and use it to initialize the matrix;
   // then also set vectors to their correct sizes:
@@ -452,7 +457,9 @@ FluidStructureProblem::setup_dofs()
   constraints.condense(dsp_pressure);
   pressure_mass.reinit(block_owned_dofs, dsp_pressure, MPI_COMM_WORLD);
 #endif
+#ifdef VERBOSE
   pcout << "Dofs initialized!" << std::endl;
+#endif
 }
 
 void
@@ -819,8 +826,9 @@ FluidStructureProblem::assemble_system()
   system_matrix.compress(VectorOperation::add);
   system_rhs.compress(VectorOperation::add);
   pressure_mass.compress(VectorOperation::add);
-
+#ifdef VERBOSE
   pcout << "Assembly complete!" << std::endl;
+#endif
 }
 
 
@@ -912,7 +920,9 @@ FluidStructureProblem::assemble_preconditioners()
   elasticity_preconditioner->initialize(system_matrix.block(2, 2),
                                         elasticity_amg_data);
   // rebuild_stokes_preconditioner = false;
+#ifdef VERBOSE
   pcout << "Preconditioners assembled!" << std::endl;
+#endif
 }
 #ifdef DEBUG
 void
@@ -1030,7 +1040,9 @@ FluidStructureProblem::solve_iterative()
 void
 FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
 {
+#ifdef VERBOSE
   pcout << "   Output results..." << std::endl;
+#endif
   std::vector<std::string> solution_names(dim, "velocity");
   solution_names.emplace_back("pressure");
   for (unsigned int d = 0; d < dim; ++d)
@@ -1073,8 +1085,10 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
 
   data_out.write_vtu_with_pvtu_record(
     "./", "solution", refinement_cycle, MPI_COMM_WORLD, 2, 8);
+#ifdef VERBOSE
   pcout << "Done!" << std::endl;
   pcout << "   Written solution_0" << refinement_cycle << ".pvtu" << std::endl;
+#endif
 }
 
 void
@@ -1228,8 +1242,9 @@ FluidStructureProblem::refine_mesh(const unsigned int n_cycle)
   parallel::distributed::GridRefinement::refine_and_coarsen_fixed_number(
     triangulation, estimated_error_per_cell, 0.3, 0.0);
   triangulation.execute_coarsening_and_refinement();
-
+#ifdef VERBOSE
   pcout << "Refinement done!" << std::endl;
+#endif
   pcout << "  Number of elements = " << triangulation.n_global_active_cells()
         << std::endl;
 }

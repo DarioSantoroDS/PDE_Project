@@ -31,21 +31,17 @@ main(int argc, char *argv[])
       if (refinement_cycle > 0)
         flow_problem.refine_mesh(refinement_cycle);
       flow_problem.setup_dofs();
-
-      flow_problem.pcout << "   Assembling..." << std::endl;
       flow_problem.assemble_system();
       flow_problem.assemble_preconditioners();
 #ifdef DEBUG
       flow_problem.output_matrix();
 #endif
-      flow_problem.pcout << "   Solving..." << std::endl;
 #ifdef ITERATIVE_SOLVER
       flow_problem.solve_iterative();
 #endif
 #ifdef DIRECT_SOLVER
       flow_problem.solve();
 #endif
-      flow_problem.pcout << "   Writing output..." << std::endl;
       flow_problem.output_results(refinement_cycle);
       flow_problem.timer.print_summary();
       flow_problem.timer.reset();

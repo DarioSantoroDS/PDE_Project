@@ -61,6 +61,7 @@
 #define ALTERNATIVE_PATTERN
 #define ITERATIVE_SOLVER
 // #define DIRECT_SOLVER
+// #define VERBOSE
 
 #include <fstream>
 #include <iostream>
