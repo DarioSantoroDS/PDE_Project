@@ -506,7 +506,7 @@ FluidStructureProblem::assemble_system()
   FullMatrix<double> local_matrix;
   FullMatrix<double> local_interface_matrix(elasticity_dofs_per_cell,
                                             stokes_dofs_per_cell);
-  FullMatrix<double> cell_pressure_mass_matrix;
+  // FullMatrix<double> cell_pressure_mass_matrix;
 
   Vector<double> local_rhs;
 
@@ -552,8 +552,8 @@ FluidStructureProblem::assemble_system()
                           cell->get_fe().n_dofs_per_cell());
       local_rhs.reinit(cell->get_fe().n_dofs_per_cell());
 
-      cell_pressure_mass_matrix.reinit(cell->get_fe().n_dofs_per_cell(),
-                                       cell->get_fe().n_dofs_per_cell());
+      // cell_pressure_mass_matrix.reinit(cell->get_fe().n_dofs_per_cell(),
+      //                                  cell->get_fe().n_dofs_per_cell());
       // With all of this done, we continue to assemble the cell terms for
       // cells that are part of the Stokes and elastic regions. While we
       // could in principle do this in one formula, in effect implementing
@@ -591,12 +591,12 @@ FluidStructureProblem::assemble_system()
                      stokes_div_phi_u[i] * stokes_phi_p[j] -
                      stokes_phi_p[i] * stokes_div_phi_u[j]) *
                     fe_values.JxW(q);
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                  cell_pressure_mass_matrix(i, j) +=
-                    fe_values[pressure].value(i, q) *
-                    fe_values[pressure].value(j, q) / viscosity *
-                    fe_values.JxW(q);
+              // for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              //   for (unsigned int j = 0; j < dofs_per_cell; ++j)
+              //     cell_pressure_mass_matrix(i, j) +=
+              //       fe_values[pressure].value(i, q) *
+              //       fe_values[pressure].value(j, q) / viscosity *
+              //       fe_values.JxW(q);
             }
         }
       else
@@ -639,7 +639,58 @@ FluidStructureProblem::assemble_system()
       cell->get_dof_indices(local_dof_indices);
       constraints.distribute_local_to_global(
         local_matrix, local_rhs, local_dof_indices, system_matrix, system_rhs);
-      // The more interesting part of this function is where we see about
+      std::vector<unsigned int> pressure_local_indices;
+      pressure_local_indices.reserve(cell->get_fe().n_dofs_per_cell());
+
+      for (unsigned int i = 0; i < cell->get_fe().n_dofs_per_cell(); ++i)
+        {
+          // Check if this DoF belongs to the pressure component (index 'dim')
+          const unsigned int component_index =
+            cell->get_fe().system_to_component_index(i).first;
+
+          if (component_index == dim) // Assuming dim is the pressure component
+            {
+              pressure_local_indices.push_back(i);
+            }
+        }
+
+      // 2. Resize the small structures
+      const unsigned int n_pressure_dofs = pressure_local_indices.size();
+      FullMatrix<double> tiny_pressure_matrix(n_pressure_dofs, n_pressure_dofs);
+      std::vector<types::global_dof_index> pressure_global_dof_indices(
+        n_pressure_dofs);
+
+      // 3. Fill the small matrix and indices
+      for (unsigned int i = 0; i < n_pressure_dofs; ++i)
+        {
+          // Get the original local index (e.g., 5) and map to global
+          const unsigned int original_i  = pressure_local_indices[i];
+          pressure_global_dof_indices[i] = dof_indices[original_i];
+
+          for (unsigned int j = 0; j < n_pressure_dofs; ++j)
+            {
+              const unsigned int original_j = pressure_local_indices[j];
+
+              // Compute the integral directly here
+              // (No need to compute the full matrix first)
+              double value = 0.0;
+              for (unsigned int q = 0; q < fe_values.n_quadrature_points; ++q)
+                {
+                  value += fe_values[pressure].value(original_i, q) *
+                           fe_values[pressure].value(original_j, q) /
+                           viscosity * fe_values.JxW(q);
+                }
+              tiny_pressure_matrix(i, j) = value;
+            }
+        }
+
+      // 4. Distribute ONLY the pressure part
+      // This is safe because pressure_mass ONLY has pressure rows allocated.
+      constraints.distribute_local_to_global(
+        tiny_pressure_matrix,
+        pressure_global_dof_indices,
+        pressure_mass); // The more interesting part of this functiodn is where
+                        // we see about
       // face terms along the interface between the two subdomains. To this
       // end, we first have to make sure that we only assemble them once
       // even though a loop over all faces of all cells would encounter each
@@ -762,7 +813,7 @@ FluidStructureProblem::assemble_system()
                 }
             }
 
-      pressure_mass.add(dof_indices, cell_pressure_mass_matrix);
+      // pressure_mass.add(dof_indices, cell_pressure_mass_matrix);
     }
 
   system_matrix.compress(VectorOperation::add);
@@ -824,72 +875,72 @@ FluidStructureProblem::assemble_preconditioners()
 {
     // if (rebuild_stokes_preconditioner == false)
     //   return;
- 
-    pcout << "   Building Stokes preconditioner..." << std::endl;
-// { 
-//     const QGauss<dim> quadrature_formula(stokes_degree + 2);
-//     FEValues<dim>     stokes_fe_values(stokes_fe,
-//                                    quadrature_formula,
-//                                    update_JxW_values | update_values |
-//                                      update_gradients);
- 
-//     const unsigned int dofs_per_cell = stokes_fe.n_dofs_per_cell();
-//     const unsigned int n_q_points    = quadrature_formula.size();
- 
-//     FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
-//     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
- 
-//     std::vector<Tensor<2, dim>> grad_phi_u(dofs_per_cell);
-//     std::vector<double>         phi_p(dofs_per_cell);
- 
-//     const FEValuesExtractors::Vector velocities(0);
-//     const FEValuesExtractors::Scalar pressure(dim);
- 
-//     for (const auto &cell : stokes_dof_handler.active_cell_iterators())
-//       {
-//         stokes_fe_values.reinit(cell);
-//         local_matrix = 0;
- 
-//         for (unsigned int q = 0; q < n_q_points; ++q)
-//           {
-//             for (unsigned int k = 0; k < dofs_per_cell; ++k)
-//               {
-//                 grad_phi_u[k] = stokes_fe_values[velocities].gradient(k, q);
-//                 phi_p[k]      = stokes_fe_values[pressure].value(k, q);
-//               }
- 
-//             for (unsigned int i = 0; i < dofs_per_cell; ++i)
-//               for (unsigned int j = 0; j < dofs_per_cell; ++j)
-//                 local_matrix(i, j) +=
-//                   (EquationData::eta *
-//                      scalar_product(grad_phi_u[i], grad_phi_u[j]) +
-//                    (1. / EquationData::eta) * phi_p[i] * phi_p[j]) *
-//                   stokes_fe_values.JxW(q);
-//           }
- 
-//         cell->get_dof_indices(local_dof_indices);
-//         stokes_constraints.distribute_local_to_global(
-//           local_matrix, local_dof_indices, stokes_preconditioner_matrix);
-//       }
-//   }
-    stokes_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
-    const FEValuesExtractors::Vector     velocity_components(0);
-     std::vector<std::vector<bool>> stokes_constant_modes;
-    DoFTools::extract_constant_modes(dof_handler,
-                                     stokes_fe.component_mask(
-                                       velocity_components),
-                                     stokes_constant_modes);
-    TrilinosWrappers::PreconditionAMG::AdditionalData stokes_amg_data;
-    stokes_amg_data.constant_modes = stokes_constant_modes;
- 
-    stokes_amg_data.elliptic              = true;
-    stokes_amg_data.higher_order_elements = true;
-    stokes_amg_data.smoother_sweeps       = 2;
-    stokes_amg_data.aggregation_threshold = 0.02;
-    stokes_preconditioner->initialize( system_matrix.block(0, 0),
-                                   stokes_amg_data);
-    mp_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
-    mp_preconditioner->initialize(pressure_mass.block(1, 1));
+  TimerOutput::Scope t(timer, "assemble_preconditioners");
+
+  pcout << "   Building Stokes preconditioner..." << std::endl;
+  // {
+  //     const QGauss<dim> quadrature_formula(stokes_degree + 2);
+  //     FEValues<dim>     stokes_fe_values(stokes_fe,
+  //                                    quadrature_formula,
+  //                                    update_JxW_values | update_values |
+  //                                      update_gradients);
+
+  //     const unsigned int dofs_per_cell = stokes_fe.n_dofs_per_cell();
+  //     const unsigned int n_q_points    = quadrature_formula.size();
+
+  //     FullMatrix<double> local_matrix(dofs_per_cell, dofs_per_cell);
+  //     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+  //     std::vector<Tensor<2, dim>> grad_phi_u(dofs_per_cell);
+  //     std::vector<double>         phi_p(dofs_per_cell);
+
+  //     const FEValuesExtractors::Vector velocities(0);
+  //     const FEValuesExtractors::Scalar pressure(dim);
+
+  //     for (const auto &cell : stokes_dof_handler.active_cell_iterators())
+  //       {
+  //         stokes_fe_values.reinit(cell);
+  //         local_matrix = 0;
+
+  //         for (unsigned int q = 0; q < n_q_points; ++q)
+  //           {
+  //             for (unsigned int k = 0; k < dofs_per_cell; ++k)
+  //               {
+  //                 grad_phi_u[k] = stokes_fe_values[velocities].gradient(k,
+  //                 q); phi_p[k]      = stokes_fe_values[pressure].value(k, q);
+  //               }
+
+  //             for (unsigned int i = 0; i < dofs_per_cell; ++i)
+  //               for (unsigned int j = 0; j < dofs_per_cell; ++j)
+  //                 local_matrix(i, j) +=
+  //                   (EquationData::eta *
+  //                      scalar_product(grad_phi_u[i], grad_phi_u[j]) +
+  //                    (1. / EquationData::eta) * phi_p[i] * phi_p[j]) *
+  //                   stokes_fe_values.JxW(q);
+  //           }
+
+  //         cell->get_dof_indices(local_dof_indices);
+  //         stokes_constraints.distribute_local_to_global(
+  //           local_matrix, local_dof_indices, stokes_preconditioner_matrix);
+  //       }
+  //   }
+  stokes_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  const FEValuesExtractors::Vector velocity_components(0);
+  std::vector<std::vector<bool>>   stokes_constant_modes;
+  DoFTools::extract_constant_modes(dof_handler,
+                                   stokes_fe.component_mask(
+                                     velocity_components),
+                                   stokes_constant_modes);
+  TrilinosWrappers::PreconditionAMG::AdditionalData stokes_amg_data;
+  stokes_amg_data.constant_modes = stokes_constant_modes;
+
+  stokes_amg_data.elliptic              = true;
+  stokes_amg_data.higher_order_elements = true;
+  stokes_amg_data.smoother_sweeps       = 2;
+  stokes_amg_data.aggregation_threshold = 0.02;
+  stokes_preconditioner->initialize(system_matrix.block(0, 0), stokes_amg_data);
+  mp_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  mp_preconditioner->initialize(pressure_mass.block(1, 1));
 
   elasticity_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
     const FEValuesExtractors::Vector     elasticity_components(dim + 1);
