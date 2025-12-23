@@ -1,3 +1,0 @@
-Number of Processes,Wallclock Time (s),Solver Time (s),Assembly Time (s),Grid Time (s),Setup DOFs Time (s),FGMRES Iterations,Warnings,Mesh Elements,Total DOFs,Number of Elements
-32,156,136,1.47,7.42,7.85,17,,1048576,6699781,1048576
-64,172,160,1.43,3.66,4.62,16,,1048576,6699781,1048576
