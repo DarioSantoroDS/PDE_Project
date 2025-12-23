@@ -17,6 +17,7 @@ main(int argc, char *argv[])
   // #else
   Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
   // #endif
+  // initializing the parameter handler and reading the parameter file
   ParameterHandler prm;
   ParameterReader  param(prm);
   param.read_parameters("../config.prm");
@@ -32,15 +33,18 @@ main(int argc, char *argv[])
         flow_problem.refine_mesh(refinement_cycle);
       flow_problem.setup_dofs();
       flow_problem.assemble_system();
+#ifndef DEBUG
       flow_problem.assemble_preconditioners();
+#endif
 #ifdef DEBUG
-      flow_problem.output_matrix();
+      flow_problem.output_matrix(); // output matrix not anymore implemented, we used it to debug when PETSc was implemented and
+                                    // we could output the matrix to check it on matlab
 #endif
 #ifdef ITERATIVE_SOLVER
       flow_problem.solve_iterative();
 #endif
 #ifdef DIRECT_SOLVER
-      flow_problem.solve();
+      flow_problem.solve(); // direct solver not anymore implemented, we used it when the matrix was not a block matrix
 #endif
       flow_problem.output_results(refinement_cycle);
       flow_problem.timer.print_summary();

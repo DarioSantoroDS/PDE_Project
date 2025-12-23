@@ -28,19 +28,7 @@ add_custom_target(release
   )
 
 
-# Locate MPI compiler.
 find_package(MPI REQUIRED)
-# set(CMAKE_CXX_COMPILER "${MPI_CXX_COMPILER}")
-
-# TODO check if this is to be done
-
-# Locate Boost.
-# find_package(Boost 1.74.0 REQUIRED
-#   COMPONENTS filesystem iostreams serialization
-#   HINTS ${BOOST_DIR} $ENV{BOOST_DIR} $ENV{mkBoostPrefix})
-# message(STATUS "Using the Boost-${Boost_VERSION} configuration found at ${Boost_DIR}")
-# message(STATUS)
-# include_directories(${Boost_INCLUDE_DIRS})
 
 # Locate deal.II and initialize its variables.
 find_package(deal.II 9.3.1 REQUIRED

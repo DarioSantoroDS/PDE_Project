@@ -55,13 +55,28 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <petscviewer.h> // Essential for the viewer commands
+#include <petscviewer.h> // PETSc viewer
 
 #define FORCE_USE_OF_TRILINOS
 #define ALTERNATIVE_PATTERN
 #define ITERATIVE_SOLVER
 // #define DIRECT_SOLVER
-// #define VERBOSE
+// #define VERBOSE  define to have more output
+
+// When compiled in deal.II DEBUG mode, there is a problem:
+// depending on the version an assert inside the
+//  DoFTools::extract_constant_modes()
+// function fails, used in the assemble_preconditioners method.
+// If deal.II is in version lower than 9.4, the Assert
+// is a ExcNotImplemented, while in version 9.4 or higher it is an
+// AssertDimension that fails. Nevertheless, in Release mode, where the
+// Asserts are not active, the code works fine.
+// To avoid this problem, when in DEBUG mode
+// we do not use the block triangular preconditioner AMG, that needs the
+// constant modes to be extracted. Instead, we use a simpler block with AMG
+// preconditioner that does not use the constant modes.
+// It has to be said that that preconditioner is less efficient, but at least
+// it works.
 
 #include <fstream>
 #include <iostream>
@@ -76,6 +91,7 @@ namespace LA
   !(defined(DEAL_II_WITH_TRILINOS) && defined(FORCE_USE_OF_TRILINOS))
   using namespace dealii::LinearAlgebraPETSc;
 #  define USE_PETSC_LA
+#  error PETSC not anymore supported
 #elif defined(DEAL_II_WITH_TRILINOS)
   using namespace dealii::LinearAlgebraTrilinos;
 #else
@@ -86,16 +102,20 @@ namespace LA
 
 using namespace dealii;
 
+
+// Class to read parameters from a parameter file
 class ParameterReader : public Subscriptor
 {
 public:
-  ParameterReader(ParameterHandler &);
+  ParameterReader(ParameterHandler &paramhandler)
+    : prm(paramhandler)
+  {}
   void
   read_parameters(const std::string &);
 
 private:
   void
-  declare_parameters();
+                    declare_parameters();
   ParameterHandler &prm;
 };
 
@@ -113,15 +133,13 @@ public:
                                       "Stokes degree"))
     , elasticity_degree(param.get_integer(std::vector<std::string>{"Geometry"},
                                           "Elasticity degree"))
-    , triangulation(
-        MPI_COMM_WORLD,
-        // Triangulation<dim>::MeshSmoothing::limit_level_difference_at_vertices
-        typename Triangulation<dim>::MeshSmoothing(
-          Triangulation<dim>::smoothing_on_refinement |
-          Triangulation<dim>::smoothing_on_coarsening)
-        // , parallel::distributed::Triangulation<
-        //   dim>::Settings::no_automatic_repartitioning
-        )
+    , triangulation(MPI_COMM_WORLD,
+                    typename Triangulation<dim>::MeshSmoothing(
+                      Triangulation<dim>::smoothing_on_refinement |
+                      Triangulation<dim>::smoothing_on_coarsening)
+                    // , parallel::distributed::Triangulation<
+                    //   dim>::Settings::no_automatic_repartitioning
+                    ) // to use when we want to avoid automatic repartitioning
     , stokes_fe(FE_Q<dim>(stokes_degree + 1),
                 dim,
                 FE_Q<dim>(stokes_degree),
@@ -164,7 +182,7 @@ public:
   assemble_preconditioners();
 #ifdef DIRECT_SOLVER
   void
-  solve();
+  solve(); // not anymore implemented
 #endif
 #ifdef ITERATIVE_SOLVER
   void
@@ -174,13 +192,13 @@ public:
   output_results(const unsigned int refinement_cycle) const;
 #ifdef DEBUG
   void
-  output_matrix() const;
+  output_matrix() const; // not anymore implemented
 #endif
   void
   refine_mesh(const unsigned int n_cycle);
 
 
-
+  // Boundary values for the Stokes equations
   class StokesBoundaryValues : public Function<dim>
   {
   public:
@@ -218,7 +236,14 @@ public:
   };
 
 
-
+  // Older preconditioner class for the block triangular preconditioner
+  // It can be used if DEFINE is defined, because of a problem happening
+  // inside deal.ii extract_constant_modes function when used with
+  // the fe_collection made by two different finite elements, one of which
+  // is FE_Nothing.
+  // It is less efficient than the new one implemented below,
+  // due to a problem happening with the AMG preconditioner when not correctly
+  // set up.
   class PreconditionBlockTriangular
   {
   public:
@@ -243,13 +268,7 @@ public:
 
       preconditioner_velocity.initialize(velocity_stiffness_);
       preconditioner_pressure.initialize(pressure_mass_);
-      preconditioner_solid.initialize(
-        solid_matrix_
-        // , TrilinosWrappers::PreconditionSSOR::AdditionalData(
-        //   1.0
-        //   // , 1 //i dont think is useful this
-        //   )
-      );
+      preconditioner_solid.initialize(solid_matrix_);
     }
 
     // Application of the preconditioner.
@@ -291,7 +310,7 @@ public:
       tmpStokes.sadd(-1.0, src.block(2));
 
 
-
+      // other way to do it, after testing we found it to be extremely slow.
       // preconditioner_solid.vmult(dst.block(2), tmpStokes);
 
       SolverControl solver_control_solid(1000, 1e-2 * tmpStokes.l2_norm());
@@ -340,7 +359,13 @@ public:
     mutable LA::MPI::Vector tmpStokes;
   };
 
-  class PreconditionBlockTriangularNewAMG
+  // New preconditioner class for the block triangular preconditioner.
+  // This one uses shared pointers for the AMG preconditioners, and is
+  // initialized correctly given the necessity for the Trilinos ML AMG
+  // preconditioner to be set up with the constant modes when dealing with a
+  // vector-valued problem.
+
+  class PreconditionBlockTriangularAMG
   {
   public:
     // Initialize the preconditioner, given the velocity stiffness matrix, the
@@ -408,7 +433,7 @@ public:
       tmpStokes.sadd(-1.0, src.block(2));
 
 
-
+      // other way to do it, after testing we found it to be extremely slow.
       // preconditioner_solid.vmult(dst.block(2), tmpStokes);
 
       SolverControl solver_control_solid(1000, 1e-2 * tmpStokes.l2_norm());
@@ -457,8 +482,11 @@ public:
     mutable LA::MPI::Vector tmpStokes;
   };
 
-
-  // class PreconditionBlockTriangularSimple
+  // Searching for other preconditioner to implement, we also tried a sort of
+  // SIMPLE preconditioner used for Navier-Stokes equations. However, the
+  // performance was not satisfactory, so we decided not to use it. The code is
+  // left here commented for possible future reference. class
+  // PreconditionBlockTriangularSimple
   // {
   // public:
   //   // Initialize the preconditioner, given the velocity stiffness matrix,
@@ -497,8 +525,6 @@ public:
   //   vmult(TrilinosWrappers::MPI::BlockVector       &dst,
   //         const TrilinosWrappers::MPI::BlockVector &src) const
   //   {
-  //     //--------------- SIMPLE velocity prediction: u* = A^{-1} rhs_u
-  //     //---------------
   //     SolverControl solver_control_u(1000, 1e-2 * src.block(0).l2_norm());
   //     SolverCG<TrilinosWrappers::MPI::Vector> solver_u(solver_control_u);
 
@@ -509,14 +535,10 @@ public:
 
   //     // u* is now stored in dst.block(0)
 
-  //     //--------------- Compute pressure rhs: g = B u* - rhs_p
-  //     //----------------------
   //     tmpStokes.reinit(src.block(1));
   //     B->vmult(tmpStokes, dst.block(0));  // tmpStokes = B*u*
   //     tmpStokes.sadd(-1.0, src.block(1)); // tmpStokes = B*u* - rhs_p
 
-  //     //--------------- SIMPLE Schur complement solve: p = S^{-1} g
-  //     //-----------------
   //     // We approximate S^{-1} ≈ (pressure_mass)^{-1}
   //     SolverControl solver_control_S(1000, 1e-2 * tmpStokes.l2_norm());
   //     SolverCG<TrilinosWrappers::MPI::Vector> solver_S(solver_control_S);
@@ -528,8 +550,6 @@ public:
 
   //     // dst.block(1) = p
 
-  //     //--------------- SIMPLE velocity correction: u = u* - A^{-1} B^T p
-  //     //-----------
   //     tmpStokes.reinit(src.block(0));
   //     B->Tvmult(tmpStokes, dst.block(1)); // tmpStokes = B^T p
 
@@ -545,8 +565,6 @@ public:
 
   //     dst.block(0).sadd(1.0, -1.0, AuInv); // u = u* − A^{-1} B^T p
 
-  //     //--------------- Solid block stays unchanged
-  //     //---------------------------------
   //     tmpStokes.reinit(src.block(2));
   //     D1->vmult(tmpStokes, dst.block(0));
   //     D2->vmult_add(tmpStokes, dst.block(1));
@@ -634,15 +652,11 @@ private:
   // work with GridGenerator directly
   parallel::distributed::Triangulation<dim> triangulation;
 
+  FESystem<dim> stokes_fe;
 
-  FESystem<dim>      stokes_fe;
   const unsigned int mpi_size;
-
   // This MPI process.
-  const unsigned int mpi_rank;
-
-
-
+  const unsigned int    mpi_rank;
   FESystem<dim>         elasticity_fe;
   hp::FECollection<dim> fe_collection;
   DoFHandler<dim>       dof_handler;
@@ -655,15 +669,16 @@ public:
   TimerOutput        timer;
 
 private:
+  // class which handles constraints, hanging nodes, boundary conditions and
+  // interface u=0 condition
   AffineConstraints<double>  constraints;
-  SparsityPattern            sparsity_pattern;
   LA::MPI::BlockSparseMatrix system_matrix;
   LA::MPI::BlockSparseMatrix pressure_mass;
   LA::MPI::BlockVector       solution;
   LA::MPI::BlockVector       locally_relevant_solution;
   LA::MPI::BlockVector       system_rhs;
 
-
+  // shared pointers to the preconditioners
   std::shared_ptr<TrilinosWrappers::PreconditionAMG> stokes_preconditioner;
   std::shared_ptr<TrilinosWrappers::PreconditionAMG> mp_preconditioner;
   std::shared_ptr<TrilinosWrappers::PreconditionAMG> elasticity_preconditioner;

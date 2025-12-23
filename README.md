@@ -15,13 +15,23 @@ Project developed by:
 
 The mathematical model is:
 $$
-\begin{cases}
--\nu \Delta u + \nabla p = 0 & \text{in } \Omega_{\text{fluid}}, \\
-\nabla \cdot u = 0 & \text{in } \Omega_{\text{fluid}}, \\
--\nabla \cdot \sigma(d) = 0 & \text{in } \Omega_{\text{solid}}, \\
-u = 0 & \text{on } \Sigma, \\
-\sigma(d)n = \nu \nabla un - pn & \text{on } \Sigma.
-\end{cases}
+    \begin{cases}
+    -2 \nu \, \nabla \cdot \boldsymbol{\varepsilon}(\boldsymbol{u}) + \nabla p = 0, & \text{in } \Omega_{\text{fluid}}, \\[6pt]
+    
+    \nabla \cdot \boldsymbol{u} = 0, 
+    & \text{in } \Omega_{\text{fluid}}, \\[6pt]
+    
+    -\nabla \cdot \sigma(\boldsymbol{d}) = 0, 
+    & \text{in } \Omega_{\text{solid}}, \\[6pt]
+    
+    \boldsymbol{u} = \boldsymbol{0}, 
+    & \text{on } \Sigma = \partial\Omega_{\text{fluid}}\cap\partial\Omega_{\text{solid}}, \\[6pt]
+    
+    \sigma(\boldsymbol{d})\boldsymbol{n} 
+    = \bigl( 2 \nu \, \boldsymbol{\varepsilon}(\boldsymbol{u}) - p\,\boldsymbol{I} \bigr)\boldsymbol{n}, 
+    & \text{on } \Sigma.
+
+    \end{cases}
 $$
 
 Under the small-displacement assumption, the fluid velocity is forced to vanish on the fluid–solid interface.<!-- TO CHECK -->
@@ -30,18 +40,44 @@ Under the small-displacement assumption, the fluid velocity is forced to vanish 
 ## Main Features
 - hp-FEM discretization with different finite elements for fluid and solid
 - One-way coupled monolithic formulation
-- Interface integration on faces and subfaces <!-- TO CHECK, SEEMS USELESS -->
 - Constraint handling for boundary conditions and fluid–solid continuity 
-- Output in **VTU/PVTU** (ParaView)
-- Export of system matrix and RHS in **MATLAB** format (via PETSc)
-- Direct solver **UMFPACK** (via PETSc)
+- Adaptive mesh refinement
+- 2D and 3D implementation
+- Parallel implementation with MPI and Trilinos
+
 
 ## Project Structure
 
-- `fsi.cpp` : entry point of the program, sets up and runs the FSI solver.
-- `FluidStructureProblem.hpp` : header file defining the `FluidStructureProblem` class and its interface.
-- `FluidStructureProblem.cpp` : implementation of the FSI solver including mesh generation, DOF setup, system assembly, interface treatment, solution, and output.
+- `src/fsi.cpp` : entry point of the program, sets up and runs the FSI solver.
+- `src/FluidStructureProblem.hpp` : header file defining the `FluidStructureProblem` class and its interface.
+- `src/FluidStructureProblem.cpp` : implementation of the FSI solver including mesh generation, DOF setup, system assembly, interface treatment, solution, and output.
+- `config.prm` : configuration file for simulation parameters.
+- `original46.cpp` : original deal.II step-46 tutorial code for reference and comparison.
+- `CMakeLists.txt` : CMake build configuration file.
+- `.gdbinit` and `.clang-format` : gdb and formatter configuration files.
+- `README.md` : this documentation file.
 
+## Configuration
+The simulation parameters are configured in `config.prm`.
+
+### Geometry
+Controls the mesh resolution and the polynomial degree of the Finite Elements.
+Configurable parameters:
+- **Number of elements per edge:** Number of elements along each edge of the square/cube
+- **Stokes degree:** Degree of the finite elements used for both fluid domains. The program already add one degree for the velocity space.
+- **Elasticity degree:** Degree of the finite elements used for solid domains.
+* **Fluid/Solid weights:** Only required if weighted triangulation partitioning is enabled.
+### Refinement
+Controls the mesh refinement strategy.
+Configurable parameters:
+- **Refinement cycles:** Number of refinement cycles to perform.
+
+### Physics
+Controls the physical parameters of the simulation.
+Configurable parameters:
+- **Viscosity:** Viscosity of the fluid.
+- **Mu:** First Lamé parameter for the solid.
+- **Lambda:** Second Lamé parameter for the solid.
 
 ## Build and Run
 
@@ -50,71 +86,11 @@ mkdir build
 cd build
 cmake ..
 make 
-./fsi n_elements_per_edge
+./fsi 
 ```
 
 ## Generated Files
 
-- `solution_00.pvtu` : ParaView-readable file with the velocity, pressure, and displacement fields; also present the material_id and subdomain_id fields.
-- `system_matrix.m` : ASCII file of the system matrix in MATLAB format.
-- `system_rhs.m` : ASCII file of the right-hand side vector in MATLAB format.
+- `solution_0*.pvtu` : ParaView-readable file with the velocity, pressure, and displacement fields; also present the material_id and subdomain_id fields. It can be visualized in ParaView. Multiple files are generated, one pvtu for each refinement step, and in case of parallel execution, one vtu for each MPI process.
 
-
-## Implementation Notes
-
-- **Fluid equations (Stokes):**
-
-$$
-  -\nu \Delta \mathbf{u} + \nabla p = 0, \quad \nabla \cdot \mathbf{u} = 0 \quad \text{in } \Omega_\text{fluid}
-$$
-
-- **Solid equations (linear elasticity):**
-
-$$
-  - \nabla \cdot \sigma(\mathbf{d}) = 0 \quad \text{in } \Omega_\text{solid}
-$$
-
-- **Interface conditions at Σ:**
-
-$$
-  \mathbf{u} = 0, \quad \sigma(\mathbf{d}) \mathbf{n} = \nu (\nabla \mathbf{u}) \mathbf{n} - p \mathbf{n}
-$$
-
-- **Boundary conditions:**
-  - Fluid: Dirichlet on top for inflow and outflow, Neumann on right and left.
-  - Solid: Homogeneous Dirichlet.
-
-- **Solution procedure:**
-  - hp-Finite Elements to handle different FE spaces in fluid and solid domains.
-  - Constraints to enforce zero velocity at the fluid-solid interface.
-  - PETSc or Trilinos direct solvers for the linear system.
-  - Trilinos iterative solvers for larger problems.
-  - Parallel MPI distribution of DOFs and matrices.
-
-- **Output:**
-  - Files can be visualized in ParaView.
-
-- **Mesh generation:**
-  - Subdivided hypercube from -1 to 1 in both directions, with `n_elements_per_edge` elements per edge.
-  - Cells marked with `fluid_domain_id` or `solid_domain_id` based on location.
-  - Boundary IDs set for Dirichlet and Neumann boundary conditions.
-
-- **System assembly:**
-  - Separate contributions for Stokes and elasticity.
-  - Special assembly along the fluid-solid interface.
-  - Interface terms ensure correct stress transfer between fluid and solid.
-
-
-## References
-
-- deal.II step-46 and multiphysics tutorials
-- Classical FSI theory for small displacement monolithic coupling
-
-
-<!-- ## Notes
-
-This is a simplified FSI mini-base project meant to demonstrate a working monolithic solver with parallel capability. It can be extended with:
-- Adaptive mesh refinement
-- Higher-order elements
-- Time-dependent simulations -->
 
