@@ -1,0 +1,12 @@
+Script started on 2025-12-19 19:15:34+01:00 [TERM="xterm-256color" TTY="/dev/pts/18" COLUMNS="202" LINES="22"]
+[?2004h]0;u10578823@cpu01: ~/PDE_Project/build[01;32mu10578823@cpu01[00m:[01;34m~/PDE_Project/build[00m$ ls
+[?2004lCMakeCache.txt       config.prm   solution_00.0.vtu  solution_00.4.vtu  solution_00.pvtu   solution_01.3.vtu  solution_01.7.vtu  solution_02.2.vtu  solution_02.6.vtu
+[0m[01;34mCMakeFiles[0m           [01;32mfsi[0m          solution_00.1.vtu  solution_00.5.vtu  solution_01.0.vtu  solution_01.4.vtu  solution_01.pvtu   solution_02.3.vtu  solution_02.7.vtu
+Makefile             [01;32moriginal46[0m   solution_00.2.vtu  solution_00.6.vtu  solution_01.1.vtu  solution_01.5.vtu  solution_02.0.vtu  solution_02.4.vtu  solution_02.pvtu
+cmake_install.cmake  session.txt  solution_00.3.vtu  solution_00.7.vtu  solution_01.2.vtu  solution_01.6.vtu  solution_02.1.vtu  solution_02.5.vtu
+[?2004h]0;u10578823@cpu01: ~/PDE_Project/build[01;32mu10578823@cpu01[00m:[01;34m~/PDE_Project/build[00m$ pwd7 
+[?2004l/home/u10578823/PDE_Project/build
+[?2004h]0;u10578823@cpu01: ~/PDE_Project/build[01;32mu10578823@cpu01[00m:[01;34m~/PDE_Project/build[00m$ quit    exit
+[?2004lexit
+
+Script done on 2025-12-19 19:17:57+01:00 [COMMAND_EXIT_CODE="0"]

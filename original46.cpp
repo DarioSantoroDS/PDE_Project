@@ -89,7 +89,8 @@ namespace Step46
   {
   public:
     FluidStructureProblem(const unsigned int stokes_degree,
-                          const unsigned int elasticity_degree);
+                          const unsigned int elasticity_degree,
+                        const int problemsize);
     void
     run();
 
@@ -134,8 +135,8 @@ namespace Step46
 
     const unsigned int stokes_degree;
     const unsigned int elasticity_degree;
-
-    Triangulation<dim>    triangulation;
+    const int          problemsize;
+    Triangulation<dim> triangulation;
     FESystem<dim>         stokes_fe;
     FESystem<dim>         elasticity_fe;
     hp::FECollection<dim> fe_collection;
@@ -229,9 +230,11 @@ namespace Step46
   template <int dim>
   FluidStructureProblem<dim>::FluidStructureProblem(
     const unsigned int stokes_degree,
-    const unsigned int elasticity_degree)
+    const unsigned int elasticity_degree,
+    const int          problemsize)
     : stokes_degree(stokes_degree)
-    , elasticity_degree(elasticity_degree)
+    , elasticity_degree(elasticity_degree),
+    problemsize(problemsize)
     , triangulation(Triangulation<dim>::maximum_smoothing)
     , stokes_fe(FE_Q<dim>(stokes_degree + 1),
                 dim,
@@ -290,7 +293,7 @@ namespace Step46
   void
   FluidStructureProblem<dim>::make_grid()
   {
-    GridGenerator::subdivided_hyper_cube(triangulation, 8, -1, 1);
+    GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
 
     for (const auto &cell : triangulation.active_cell_iterators())
       for (const auto &face : cell->face_iterators())
@@ -1055,13 +1058,13 @@ namespace Step46
 // This, final, function contains pretty much exactly what most of the other
 // tutorial programs have:
 int
-main()
+main(int argc, char *argv[])
 {
   try
     {
       using namespace Step46;
-
-      FluidStructureProblem<2> flow_problem(1, 1);
+      int                      value = std::atoi(argv[1]);
+      FluidStructureProblem<2> flow_problem(1, 1,value);
       flow_problem.run();
     }
   catch (std::exception &exc)

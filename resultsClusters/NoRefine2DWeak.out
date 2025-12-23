@@ -1,0 +1,462 @@
+First TEST: 8 16 32
+
+   Generating the mesh...
+  Number of elements = 64
+   Initializing dofs...
+    total    = 531
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  14 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |    0.0335s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0135s |        40% |
+| assembly_system                 |         1 |   0.00209s |       6.3% |
+| make_grid                       |         1 |   0.00088s |       2.6% |
+| setup_dofs                      |         1 |   0.00474s |        14% |
+| solve_iterative                 |         1 |   0.00327s |       9.8% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m0.660s
+user    0m0.227s
+sys     0m0.190s
+
+subsection Geometry
+  set Number of cells per edge        = 8
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+
+ time mpirun -n 4 ./fsi
+   Generating the mesh...
+  Number of elements = 256
+   Initializing dofs...
+    total    = 1873
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  15 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |    0.0859s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0404s |        47% |
+| assembly_system                 |         1 |   0.00617s |       7.2% |
+| make_grid                       |         1 |   0.00245s |       2.9% |
+| setup_dofs                      |         1 |    0.0159s |        19% |
+| solve_iterative                 |         1 |    0.0138s |        16% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m0.761s
+user    0m1.136s
+sys     0m0.712s
+
+subsection Geometry
+  set Number of cells per edge        = 16
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+
+ time mpirun -n 16  ./fsi
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.149s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0301s |        20% |
+| assembly_system                 |         1 |   0.00565s |       3.8% |
+| make_grid                       |         1 |   0.00685s |       4.6% |
+| setup_dofs                      |         1 |    0.0186s |        12% |
+| solve_iterative                 |         1 |    0.0438s |        29% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m0.911s
+user    0m4.621s
+sys     0m3.057s
+
+subsection Geometry
+  set Number of cells per edge        = 32
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+
+SECOND TEST: 32 64 128
+
+
+ time ./fsi
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.226s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0323s |        14% |
+| assembly_system                 |         1 |    0.0238s |        11% |
+| make_grid                       |         1 |   0.00563s |       2.5% |
+| setup_dofs                      |         1 |     0.035s |        15% |
+| solve_iterative                 |         1 |     0.118s |        52% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m0.901s
+user    0m0.784s
+sys     0m0.236s
+
+ cat ../config.prm 
+subsection Geometry
+  set Number of cells per edge        = 32
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+
+ time mpirun -n 4 ./fsi
+   Generating the mesh...
+  Number of elements = 4096
+   Initializing dofs...
+    total    = 27061
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.566s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0564s |        10% |
+| assembly_system                 |         1 |    0.0371s |       6.5% |
+| make_grid                       |         1 |    0.0177s |       3.1% |
+| setup_dofs                      |         1 |    0.0632s |        11% |
+| solve_iterative                 |         1 |     0.378s |        67% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m1.252s
+user    0m3.248s
+sys     0m0.904s
+
+subsection Geometry
+  set Number of cells per edge        = 64
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+
+ time mpirun -n 16 ./fsi
+   Generating the mesh...
+  Number of elements = 16384
+   Initializing dofs...
+    total    = 106341
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.36s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0706s |       5.2% |
+| assembly_system                 |         1 |    0.0442s |       3.3% |
+| make_grid                       |         1 |    0.0457s |       3.4% |
+| setup_dofs                      |         1 |     0.108s |       7.9% |
+| solve_iterative                 |         1 |      1.04s |        76% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m2.148s
+user    0m24.132s
+sys     0m3.520s
+
+subsection Geometry
+  set Number of cells per edge        = 128
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+THIRD TEST: 64 128 256
+
+
+ time ./fsi
+   Generating the mesh...
+  Number of elements = 4096
+   Initializing dofs...
+    total    = 27061
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.05s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0885s |       8.4% |
+| assembly_system                 |         1 |     0.085s |       8.1% |
+| make_grid                       |         1 |    0.0157s |       1.5% |
+| setup_dofs                      |         1 |     0.123s |        12% |
+| solve_iterative                 |         1 |      0.71s |        68% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m1.745s
+user    0m2.165s
+sys     0m0.279s
+
+subsection Geometry
+  set Number of cells per edge        = 64
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+
+ time mpirun -n 4 ./fsi
+   Generating the mesh...
+  Number of elements = 16384
+   Initializing dofs...
+    total    = 106341
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      2.59s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.138s |       5.3% |
+| assembly_system                 |         1 |      0.14s |       5.4% |
+| make_grid                       |         1 |    0.0471s |       1.8% |
+| setup_dofs                      |         1 |      0.22s |       8.5% |
+| solve_iterative                 |         1 |      2.01s |        78% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m3.279s
+user    0m11.387s
+sys     0m1.025s
+
+ cat ../config.prm 
+subsection Geometry
+  set Number of cells per edge        = 128
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+
+ time mpirun -n 16 ./fsi
+   Generating the mesh...
+  Number of elements = 65536
+   Initializing dofs...
+    total    = 421573
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      6.34s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.205s |       3.2% |
+| assembly_system                 |         1 |     0.169s |       2.7% |
+| make_grid                       |         1 |      0.22s |       3.5% |
+| setup_dofs                      |         1 |     0.381s |         6% |
+| solve_iterative                 |         1 |      5.28s |        83% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m7.151s
+user    1m43.556s
+sys     0m4.822s
+
+subsection Geometry
+  set Number of cells per edge        = 256
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end

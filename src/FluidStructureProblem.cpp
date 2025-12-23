@@ -912,7 +912,10 @@ FluidStructureProblem::assemble_preconditioners()
   elasticity_amg_data.constant_modes = elasticity_constant_modes;
 
   elasticity_amg_data.elliptic              = true;
-  elasticity_amg_data.higher_order_elements = true;
+  if (elasticity_degree >= 2)
+    elasticity_amg_data.higher_order_elements = true;
+  else
+    elasticity_amg_data.higher_order_elements = false;
   elasticity_amg_data.smoother_sweeps       = 2;
   elasticity_amg_data.aggregation_threshold = 0.02;
   elasticity_preconditioner->initialize(system_matrix.block(2, 2),

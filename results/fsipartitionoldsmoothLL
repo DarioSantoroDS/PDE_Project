@@ -1,0 +1,266 @@
+   Generating the mesh...
+  Number of elements = 256
+   Initializing dofs...
+    total    = 1873
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  15 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |    0.0921s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0238s |        26% |
+| assembly_system                 |         1 |   0.00644s |         7% |
+| make_grid                       |         1 |   0.00516s |       5.6% |
+| setup_dofs                      |         1 |    0.0203s |        22% |
+| solve_iterative                 |         1 |    0.0149s |        16% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 502
+   Initializing dofs...
+    total    = 3500
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.189s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0333s |        18% |
+| assembly_system                 |         1 |    0.0127s |       6.7% |
+| refining                        |         1 |    0.0146s |       7.7% |
+| setup_dofs                      |         1 |    0.0204s |        11% |
+| solve_iterative                 |         1 |     0.102s |        54% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 1138
+   Initializing dofs...
+    total    = 6802
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.264s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0464s |        18% |
+| assembly_system                 |         1 |    0.0242s |       9.2% |
+| refining                        |         1 |    0.0273s |        10% |
+| setup_dofs                      |         1 |    0.0506s |        19% |
+| solve_iterative                 |         1 |     0.102s |        39% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 2197
+   Initializing dofs...
+    total    = 11471
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.414s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0552s |        13% |
+| assembly_system                 |         1 |    0.0265s |       6.4% |
+| refining                        |         1 |     0.038s |       9.2% |
+| setup_dofs                      |         1 |    0.0469s |        11% |
+| solve_iterative                 |         1 |     0.221s |        53% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 4441
+   Initializing dofs...
+    total    = 20247
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.696s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0719s |        10% |
+| assembly_system                 |         1 |    0.0346s |         5% |
+| refining                        |         1 |    0.0412s |       5.9% |
+| setup_dofs                      |         1 |    0.0685s |       9.8% |
+| solve_iterative                 |         1 |     0.424s |        61% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 8647
+   Initializing dofs...
+    total    = 34741
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.38s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.115s |       8.3% |
+| assembly_system                 |         1 |    0.0843s |       6.1% |
+| refining                        |         1 |    0.0797s |       5.8% |
+| setup_dofs                      |         1 |     0.109s |       7.9% |
+| solve_iterative                 |         1 |     0.881s |        64% |
++---------------------------------+-----------+------------+------------+
+
+
+   Generating the mesh...
+  Number of elements = 256
+   Initializing dofs...
+    total    = 1873
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  15 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |    0.0707s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0245s |        35% |
+| assembly_system                 |         1 |   0.00603s |       8.5% |
+| make_grid                       |         1 |   0.00485s |       6.9% |
+| setup_dofs                      |         1 |      0.02s |        28% |
+| solve_iterative                 |         1 |    0.0103s |        14% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 502
+   Initializing dofs...
+    total    = 3500
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.102s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0166s |        16% |
+| assembly_system                 |         1 |   0.00952s |       9.3% |
+| refining                        |         1 |    0.0123s |        12% |
+| setup_dofs                      |         1 |    0.0184s |        18% |
+| solve_iterative                 |         1 |    0.0403s |        39% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 1138
+   Initializing dofs...
+    total    = 6802
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.194s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0292s |        15% |
+| assembly_system                 |         1 |    0.0119s |       6.1% |
+| refining                        |         1 |    0.0161s |       8.3% |
+| setup_dofs                      |         1 |    0.0295s |        15% |
+| solve_iterative                 |         1 |    0.0934s |        48% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 2239
+   Initializing dofs...
+    total    = 11973
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.365s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0356s |       9.8% |
+| assembly_system                 |         1 |    0.0222s |       6.1% |
+| refining                        |         1 |     0.029s |         8% |
+| setup_dofs                      |         1 |    0.0465s |        13% |
+| solve_iterative                 |         1 |     0.207s |        57% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 4567
+   Initializing dofs...
+    total    = 21288
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.739s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0711s |       9.6% |
+| assembly_system                 |         1 |    0.0393s |       5.3% |
+| refining                        |         1 |    0.0532s |       7.2% |
+| setup_dofs                      |         1 |    0.0759s |        10% |
+| solve_iterative                 |         1 |     0.434s |        59% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 8926
+   Initializing dofs...
+    total    = 36510
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.53s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.136s |       8.9% |
+| assembly_system                 |         1 |    0.0921s |         6% |
+| refining                        |         1 |    0.0974s |       6.4% |
+| setup_dofs                      |         1 |     0.134s |       8.8% |
+| solve_iterative                 |         1 |     0.953s |        62% |
++---------------------------------+-----------+------------+------------+
+
+

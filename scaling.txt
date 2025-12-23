@@ -1,0 +1,35 @@
+1) STRONG NO REFINE
+partiamo da pari, poi male che vada andiamo a potenze di due
+32 può essere decente? sennò 64
+
+2) STRONG CON REFINE
+partiamo da pari, poi male che vada andiamo a potenze di due
+si parte da 8 comunque
+
+3) WEAK NO REFINE
+da definire ancora
+
+4)Iterativo versus diretto ?
+2D e 3D, penso basti poco 
+
+ERROR:
+Assembly complete!
+   Building preconditioners...
+
+--------------------------------------------------------
+An error occurred in line <2585> of file </usr/src/dealii-v9.6.0/source/fe/fe_system.cc> in function
+    std::pair<dealii::Table<2, bool>, std::vector<unsigned int> > dealii::FESystem<dim, spacedim>::get_constant_modes() const [with int dim = 2; int spacedim = 2]
+The violated condition was: 
+    ::dealii::deal_II_exceptions::internals::compare_for_equality(components.size(), constant_modes.n_rows())
+Additional information: 
+    Two sizes or dimensions were supposed to be equal, but aren't. They
+    are 3 and 5.
+
+Stacktrace:
+-----------
+#0  /usr/local/lib/libdeal_II.g.so.9.6.0: dealii::FESystem<2, 2>::get_constant_modes() const
+#1  /usr/local/lib/libdeal_II.g.so.9.6.0: void dealii::DoFTools::internal::extract_constant_modes<2, 2>(dealii::DoFHandler<2, 2> const&, dealii::ComponentMask const&, unsigned int, std::vector<std::vector<bool, std::allocator<bool> >, std::allocator<std::vector<bool, std::allocator<bool> > > >&)
+#2  /usr/local/lib/libdeal_II.g.so.9.6.0: void dealii::DoFTools::extract_constant_modes<2, 2>(dealii::DoFHandler<2, 2> const&, dealii::ComponentMask const&, std::vector<std::vector<bool, std::allocator<bool> >, std::allocator<std::vector<bool, std::allocator<bool> > > >&)
+#3  ./fsi: FluidStructureProblem::assemble_preconditioners()
+#4  ./fsi: main
+--------------------------------------------------------

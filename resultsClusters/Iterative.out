@@ -1,0 +1,130 @@
+2D 512*512
+
+u10578823@cpu01:~/PDE_Project/build$ ./fsi
+   Generating the mesh...
+  Number of elements = 262144
+   Initializing dofs...
+    total    = 1678725
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |       249s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      5.17s |       2.1% |
+| assembly_system                 |         1 |      5.88s |       2.4% |
+| make_grid                       |         1 |     0.922s |      0.37% |
+| setup_dofs                      |         1 |      7.95s |       3.2% |
+| solve_iterative                 |         1 |       228s |        92% |
++---------------------------------+-----------+------------+------------+
+
+
+u10578823@cpu01:~/PDE_Project/build$ mpirun -n 16 ./fsi
+   Generating the mesh...
+  Number of elements = 262144
+   Initializing dofs...
+    total    = 1678725
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  19 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      36.6s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.655s |       1.8% |
+| assembly_system                 |         1 |     0.647s |       1.8% |
+| make_grid                       |         1 |     0.715s |         2% |
+| setup_dofs                      |         1 |      1.51s |       4.1% |
+| solve_iterative                 |         1 |      32.8s |        90% |
++---------------------------------+-----------+------------+------------+
+
+3d 8*8*8
+
+u10578823@cpu01:~/PDE_Project/build$ time ./fsi
+   Generating the mesh...
+  Number of elements = 512
+   Initializing dofs...
+    total    = 11631
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.36s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      0.14s |        10% |
+| assembly_system                 |         1 |     0.532s |        39% |
+| make_grid                       |         1 |   0.00876s |      0.65% |
+| setup_dofs                      |         1 |      0.16s |        12% |
+| solve_iterative                 |         1 |     0.502s |        37% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m2.056s
+user    0m2.298s
+sys     0m0.346s
+
+3d 16*16*16
+
+u10578823@cpu01:~/PDE_Project/build$ time ./fsi
+   Generating the mesh...
+  Number of elements = 4096
+   Initializing dofs...
+    total    = 80311
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      14.6s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      1.35s |       9.2% |
+| assembly_system                 |         1 |      4.12s |        28% |
+| make_grid                       |         1 |    0.0596s |      0.41% |
+| setup_dofs                      |         1 |      1.26s |       8.6% |
+| solve_iterative                 |         1 |      7.82s |        53% |
++---------------------------------+-----------+------------+------------+
+
+
+
+real    0m15.377s
+user    0m16.029s
+sys     0m0.764s
+
+
+Tabella
+
+diretto  3d 8*8*8 1.42
+diretto 3d 16*16*16 30.29
+iterativo 3d 8*8*8 2.056
+iterativo 3d 16*16*16 15.377
+
+diretto 2d 512*512 51.79
+iterativo 2d 512*512*512 249s
+iterativo 2d 512*512*512 16 cpus 36.6s

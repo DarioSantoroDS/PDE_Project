@@ -1,0 +1,29 @@
+- Connect to VPN via GlobalProtect and gp-dmat-saml.vpn.polimi.it 
+- to connect to server:
+ssh u10578823@10.78.18.100
+- to do in the beginning or every other shell if needed:
+. /etc/profile.d/pbs.sh
+- clone our repo:
+git clone nostrarepo
+- entry a cpu node:
+qsub -I
+- open apptainer shell for mkmodules:
+apptainer shell /software/containers/mk/amsc_mk_2025.sif
+- run shell with module ready to be loaded:
+source /u/sw/etc/bash.bashrc
+- load first module
+module load gcc-glibc
+- load other modules
+module load dealii
+
+- to build
+cd PDE_Project
+mkdir build
+cd build
+cmake ..
+make -j
+
+- to run
+mpirun -n 32 ./fsi n_edges
+cmake -DCMAKE_BUILD_TYPE="Debug" .
+cmake -DCMAKE_BUILD_TYPE="Release" .

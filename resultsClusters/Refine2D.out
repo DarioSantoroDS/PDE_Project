@@ -1,0 +1,1863 @@
+Scaling run started at Tue Dec 23 11:32:53 CET 2025
+--------------------------------
+
+Running with 1 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      0.23s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0321s |        14% |
+| assembly_system                 |         1 |    0.0265s |        12% |
+| make_grid                       |         1 |    0.0052s |       2.3% |
+| setup_dofs                      |         1 |    0.0332s |        14% |
+| solve_iterative                 |         1 |     0.119s |        52% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.465s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0431s |       9.3% |
+| assembly_system                 |         1 |    0.0366s |       7.9% |
+| refining                        |         1 |    0.0326s |         7% |
+| setup_dofs                      |         1 |    0.0488s |        10% |
+| solve_iterative                 |         1 |     0.288s |        62% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3961
+   Initializing dofs...
+    total    = 17659
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.05s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0591s |       5.6% |
+| assembly_system                 |         1 |    0.0606s |       5.8% |
+| refining                        |         1 |    0.0464s |       4.4% |
+| setup_dofs                      |         1 |    0.0822s |       7.8% |
+| solve_iterative                 |         1 |     0.775s |        74% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7633
+   Initializing dofs...
+    total    = 30017
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      2.64s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0955s |       3.6% |
+| assembly_system                 |         1 |     0.101s |       3.8% |
+| refining                        |         1 |    0.0767s |       2.9% |
+| setup_dofs                      |         1 |     0.134s |       5.1% |
+| solve_iterative                 |         1 |      2.19s |        83% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14941
+   Initializing dofs...
+    total    = 52710
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      7.11s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.157s |       2.2% |
+| assembly_system                 |         1 |     0.178s |       2.5% |
+| refining                        |         1 |      0.12s |       1.7% |
+| setup_dofs                      |         1 |     0.252s |       3.5% |
+| solve_iterative                 |         1 |      6.35s |        89% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28627
+   Initializing dofs...
+    total    = 90878
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      18.7s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.245s |       1.3% |
+| assembly_system                 |         1 |     0.303s |       1.6% |
+| refining                        |         1 |     0.211s |       1.1% |
+| setup_dofs                      |         1 |     0.426s |       2.3% |
+| solve_iterative                 |         1 |      17.4s |        93% |
++---------------------------------+-----------+------------+------------+
+
+
+real 30.88
+user 55.73
+sys 4.34
+
+Running with 2 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.196s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0365s |        19% |
+| assembly_system                 |         1 |    0.0178s |       9.1% |
+| make_grid                       |         1 |   0.00527s |       2.7% |
+| setup_dofs                      |         1 |    0.0282s |        14% |
+| solve_iterative                 |         1 |    0.0997s |        51% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.429s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0461s |        11% |
+| assembly_system                 |         1 |    0.0308s |       7.2% |
+| refining                        |         1 |    0.0131s |         3% |
+| setup_dofs                      |         1 |    0.0432s |        10% |
+| solve_iterative                 |         1 |     0.288s |        67% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3961
+   Initializing dofs...
+    total    = 17659
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.913s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0688s |       7.5% |
+| assembly_system                 |         1 |    0.0478s |       5.2% |
+| refining                        |         1 |    0.0283s |       3.1% |
+| setup_dofs                      |         1 |    0.0675s |       7.4% |
+| solve_iterative                 |         1 |     0.689s |        75% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7630
+   Initializing dofs...
+    total    = 29992
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      2.11s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.102s |       4.8% |
+| assembly_system                 |         1 |    0.0791s |       3.7% |
+| refining                        |         1 |    0.0437s |       2.1% |
+| setup_dofs                      |         1 |     0.112s |       5.3% |
+| solve_iterative                 |         1 |      1.76s |        83% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14941
+   Initializing dofs...
+    total    = 52761
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      5.48s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.158s |       2.9% |
+| assembly_system                 |         1 |     0.136s |       2.5% |
+| refining                        |         1 |    0.0744s |       1.4% |
+| setup_dofs                      |         1 |     0.191s |       3.5% |
+| solve_iterative                 |         1 |      4.89s |        89% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28633
+   Initializing dofs...
+    total    = 90960
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      13.3s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.204s |       1.5% |
+| assembly_system                 |         1 |     0.229s |       1.7% |
+| refining                        |         1 |     0.157s |       1.2% |
+| setup_dofs                      |         1 |     0.319s |       2.4% |
+| solve_iterative                 |         1 |      12.4s |        93% |
++---------------------------------+-----------+------------+------------+
+
+
+real 23.10
+user 45.37
+sys 0.62
+
+Running with 4 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.145s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0324s |        22% |
+| assembly_system                 |         1 |     0.011s |       7.6% |
+| make_grid                       |         1 |   0.00506s |       3.5% |
+| setup_dofs                      |         1 |    0.0248s |        17% |
+| solve_iterative                 |         1 |    0.0639s |        44% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.315s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0373s |        12% |
+| assembly_system                 |         1 |    0.0187s |       5.9% |
+| refining                        |         1 |     0.013s |       4.1% |
+| setup_dofs                      |         1 |    0.0315s |        10% |
+| solve_iterative                 |         1 |     0.206s |        65% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3961
+   Initializing dofs...
+    total    = 17659
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.616s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0501s |       8.1% |
+| assembly_system                 |         1 |     0.032s |       5.2% |
+| refining                        |         1 |    0.0201s |       3.3% |
+| setup_dofs                      |         1 |    0.0484s |       7.8% |
+| solve_iterative                 |         1 |     0.455s |        74% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7630
+   Initializing dofs...
+    total    = 29992
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |       1.4s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0824s |       5.9% |
+| assembly_system                 |         1 |    0.0567s |       4.1% |
+| refining                        |         1 |    0.0318s |       2.3% |
+| setup_dofs                      |         1 |    0.0855s |       6.1% |
+| solve_iterative                 |         1 |      1.13s |        81% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14941
+   Initializing dofs...
+    total    = 52761
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      3.54s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.132s |       3.7% |
+| assembly_system                 |         1 |    0.0979s |       2.8% |
+| refining                        |         1 |    0.0455s |       1.3% |
+| setup_dofs                      |         1 |     0.142s |         4% |
+| solve_iterative                 |         1 |       3.1s |        88% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28627
+   Initializing dofs...
+    total    = 90948
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |       7.9s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.153s |       1.9% |
+| assembly_system                 |         1 |     0.152s |       1.9% |
+| refining                        |         1 |    0.0733s |      0.93% |
+| setup_dofs                      |         1 |     0.231s |       2.9% |
+| solve_iterative                 |         1 |      7.26s |        92% |
++---------------------------------+-----------+------------+------------+
+
+
+real 14.61
+user 63.40
+sys 2.82
+
+Running with 6 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      0.14s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0321s |        23% |
+| assembly_system                 |         1 |   0.00962s |       6.9% |
+| make_grid                       |         1 |   0.00638s |       4.6% |
+| setup_dofs                      |         1 |    0.0234s |        17% |
+| solve_iterative                 |         1 |    0.0559s |        40% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1972
+   Initializing dofs...
+    total    = 10788
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.277s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0346s |        12% |
+| assembly_system                 |         1 |    0.0147s |       5.3% |
+| refining                        |         1 |    0.0114s |       4.1% |
+| setup_dofs                      |         1 |    0.0271s |       9.8% |
+| solve_iterative                 |         1 |     0.181s |        65% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3964
+   Initializing dofs...
+    total    = 17686
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.512s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.045s |       8.8% |
+| assembly_system                 |         1 |     0.024s |       4.7% |
+| refining                        |         1 |    0.0166s |       3.2% |
+| setup_dofs                      |         1 |    0.0399s |       7.8% |
+| solve_iterative                 |         1 |     0.377s |        74% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7630
+   Initializing dofs...
+    total    = 29994
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.12s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.068s |       6.1% |
+| assembly_system                 |         1 |    0.0373s |       3.3% |
+| refining                        |         1 |    0.0248s |       2.2% |
+| setup_dofs                      |         1 |    0.0608s |       5.4% |
+| solve_iterative                 |         1 |     0.913s |        82% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14950
+   Initializing dofs...
+    total    = 52851
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      2.58s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0994s |       3.9% |
+| assembly_system                 |         1 |     0.061s |       2.4% |
+| refining                        |         1 |    0.0361s |       1.4% |
+| setup_dofs                      |         1 |    0.0981s |       3.8% |
+| solve_iterative                 |         1 |      2.27s |        88% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28642
+   Initializing dofs...
+    total    = 91010
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |       5.7s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.118s |       2.1% |
+| assembly_system                 |         1 |     0.115s |         2% |
+| refining                        |         1 |    0.0581s |         1% |
+| setup_dofs                      |         1 |     0.188s |       3.3% |
+| solve_iterative                 |         1 |      5.19s |        91% |
++---------------------------------+-----------+------------+------------+
+
+
+real 11.02
+user 69.20
+sys 2.64
+
+Running with 8 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.155s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0373s |        24% |
+| assembly_system                 |         1 |   0.00938s |       6.1% |
+| make_grid                       |         1 |   0.00762s |       4.9% |
+| setup_dofs                      |         1 |     0.024s |        16% |
+| solve_iterative                 |         1 |    0.0526s |        34% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.278s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.034s |        12% |
+| assembly_system                 |         1 |    0.0125s |       4.5% |
+| refining                        |         1 |    0.0178s |       6.4% |
+| setup_dofs                      |         1 |    0.0262s |       9.4% |
+| solve_iterative                 |         1 |     0.163s |        59% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3961
+   Initializing dofs...
+    total    = 17659
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.502s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.045s |         9% |
+| assembly_system                 |         1 |    0.0224s |       4.5% |
+| refining                        |         1 |    0.0193s |       3.8% |
+| setup_dofs                      |         1 |    0.0376s |       7.5% |
+| solve_iterative                 |         1 |     0.352s |        70% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7627
+   Initializing dofs...
+    total    = 29967
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.997s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0646s |       6.5% |
+| assembly_system                 |         1 |    0.0341s |       3.4% |
+| refining                        |         1 |    0.0265s |       2.7% |
+| setup_dofs                      |         1 |    0.0578s |       5.8% |
+| solve_iterative                 |         1 |     0.786s |        79% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14935
+   Initializing dofs...
+    total    = 52804
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      2.26s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0961s |       4.3% |
+| assembly_system                 |         1 |     0.056s |       2.5% |
+| refining                        |         1 |    0.0345s |       1.5% |
+| setup_dofs                      |         1 |    0.0909s |         4% |
+| solve_iterative                 |         1 |      1.95s |        86% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28606
+   Initializing dofs...
+    total    = 90934
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      4.57s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.098s |       2.1% |
+| assembly_system                 |         1 |    0.0904s |         2% |
+| refining                        |         1 |    0.0507s |       1.1% |
+| setup_dofs                      |         1 |     0.146s |       3.2% |
+| solve_iterative                 |         1 |      4.14s |        91% |
++---------------------------------+-----------+------------+------------+
+
+
+real 9.47
+user 76.63
+sys 3.10
+
+Running with 10 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.176s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0395s |        22% |
+| assembly_system                 |         1 |   0.00969s |       5.5% |
+| make_grid                       |         1 |   0.00815s |       4.6% |
+| setup_dofs                      |         1 |    0.0257s |        15% |
+| solve_iterative                 |         1 |    0.0618s |        35% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.251s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0322s |        13% |
+| assembly_system                 |         1 |    0.0109s |       4.3% |
+| refining                        |         1 |    0.0128s |       5.1% |
+| setup_dofs                      |         1 |     0.024s |       9.6% |
+| solve_iterative                 |         1 |     0.144s |        58% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3961
+   Initializing dofs...
+    total    = 17659
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.483s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0443s |       9.2% |
+| assembly_system                 |         1 |      0.02s |       4.2% |
+| refining                        |         1 |    0.0178s |       3.7% |
+| setup_dofs                      |         1 |    0.0369s |       7.7% |
+| solve_iterative                 |         1 |     0.335s |        69% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7627
+   Initializing dofs...
+    total    = 29967
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.982s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0731s |       7.4% |
+| assembly_system                 |         1 |     0.033s |       3.4% |
+| refining                        |         1 |    0.0295s |         3% |
+| setup_dofs                      |         1 |    0.0661s |       6.7% |
+| solve_iterative                 |         1 |     0.746s |        76% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14932
+   Initializing dofs...
+    total    = 52779
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      3.11s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0961s |       3.1% |
+| assembly_system                 |         1 |    0.0526s |       1.7% |
+| refining                        |         1 |    0.0304s |      0.98% |
+| setup_dofs                      |         1 |    0.0899s |       2.9% |
+| solve_iterative                 |         1 |       1.8s |        58% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28603
+   Initializing dofs...
+    total    = 90959
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      4.17s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0944s |       2.3% |
+| assembly_system                 |         1 |    0.0831s |         2% |
+| refining                        |         1 |    0.0472s |       1.1% |
+| setup_dofs                      |         1 |     0.143s |       3.4% |
+| solve_iterative                 |         1 |      3.76s |        90% |
++---------------------------------+-----------+------------+------------+
+
+
+real 9.91
+user 96.95
+sys 3.14
+
+Running with 12 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.145s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0313s |        22% |
+| assembly_system                 |         1 |   0.00687s |       4.7% |
+| make_grid                       |         1 |   0.00553s |       3.8% |
+| setup_dofs                      |         1 |    0.0212s |        15% |
+| solve_iterative                 |         1 |    0.0487s |        34% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.262s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0317s |        12% |
+| assembly_system                 |         1 |   0.00963s |       3.7% |
+| refining                        |         1 |    0.0132s |       5.1% |
+| setup_dofs                      |         1 |    0.0222s |       8.5% |
+| solve_iterative                 |         1 |     0.154s |        59% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3964
+   Initializing dofs...
+    total    = 17612
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.466s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0422s |       9.1% |
+| assembly_system                 |         1 |    0.0174s |       3.7% |
+| refining                        |         1 |    0.0173s |       3.7% |
+| setup_dofs                      |         1 |    0.0338s |       7.2% |
+| solve_iterative                 |         1 |     0.323s |        69% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7633
+   Initializing dofs...
+    total    = 29928
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      0.92s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0664s |       7.2% |
+| assembly_system                 |         1 |    0.0311s |       3.4% |
+| refining                        |         1 |    0.0225s |       2.4% |
+| setup_dofs                      |         1 |    0.0549s |         6% |
+| solve_iterative                 |         1 |     0.711s |        77% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14941
+   Initializing dofs...
+    total    = 52744
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.98s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.094s |       4.8% |
+| assembly_system                 |         1 |    0.0511s |       2.6% |
+| refining                        |         1 |    0.0268s |       1.4% |
+| setup_dofs                      |         1 |    0.0859s |       4.3% |
+| solve_iterative                 |         1 |      1.68s |        85% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28615
+   Initializing dofs...
+    total    = 90894
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      3.71s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0914s |       2.5% |
+| assembly_system                 |         1 |    0.0793s |       2.1% |
+| refining                        |         1 |    0.0409s |       1.1% |
+| setup_dofs                      |         1 |     0.135s |       3.6% |
+| solve_iterative                 |         1 |      3.31s |        89% |
++---------------------------------+-----------+------------+------------+
+
+
+real 8.23
+user 95.37
+sys 3.59
+
+Running with 14 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.159s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0387s |        24% |
+| assembly_system                 |         1 |    0.0064s |         4% |
+| make_grid                       |         1 |   0.00631s |         4% |
+| setup_dofs                      |         1 |    0.0217s |        14% |
+| solve_iterative                 |         1 |    0.0477s |        30% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1966
+   Initializing dofs...
+    total    = 10755
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.267s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0324s |        12% |
+| assembly_system                 |         1 |   0.00915s |       3.4% |
+| refining                        |         1 |    0.0154s |       5.8% |
+| setup_dofs                      |         1 |    0.0229s |       8.6% |
+| solve_iterative                 |         1 |     0.154s |        58% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3961
+   Initializing dofs...
+    total    = 17659
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      0.46s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0421s |       9.1% |
+| assembly_system                 |         1 |    0.0161s |       3.5% |
+| refining                        |         1 |    0.0156s |       3.4% |
+| setup_dofs                      |         1 |    0.0325s |       7.1% |
+| solve_iterative                 |         1 |     0.322s |        70% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7627
+   Initializing dofs...
+    total    = 29967
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.913s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0909s |        10% |
+| assembly_system                 |         1 |    0.0274s |         3% |
+| refining                        |         1 |    0.0239s |       2.6% |
+| setup_dofs                      |         1 |     0.056s |       6.1% |
+| solve_iterative                 |         1 |     0.675s |        74% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14935
+   Initializing dofs...
+    total    = 52764
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.91s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0945s |         5% |
+| assembly_system                 |         1 |    0.0498s |       2.6% |
+| refining                        |         1 |    0.0277s |       1.5% |
+| setup_dofs                      |         1 |    0.0863s |       4.5% |
+| solve_iterative                 |         1 |       1.6s |        84% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28597
+   Initializing dofs...
+    total    = 90974
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      3.41s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0904s |       2.7% |
+| assembly_system                 |         1 |     0.077s |       2.3% |
+| refining                        |         1 |     0.039s |       1.1% |
+| setup_dofs                      |         1 |      0.13s |       3.8% |
+| solve_iterative                 |         1 |      3.02s |        89% |
++---------------------------------+-----------+------------+------------+
+
+
+real 7.88
+user 104.85
+sys 3.88
+
+Running with 16 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.172s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0381s |        22% |
+| assembly_system                 |         1 |   0.00674s |       3.9% |
+| make_grid                       |         1 |   0.00712s |       4.1% |
+| setup_dofs                      |         1 |    0.0238s |        14% |
+| solve_iterative                 |         1 |     0.054s |        31% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.261s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0373s |        14% |
+| assembly_system                 |         1 |    0.0084s |       3.2% |
+| refining                        |         1 |    0.0133s |       5.1% |
+| setup_dofs                      |         1 |    0.0241s |       9.2% |
+| solve_iterative                 |         1 |     0.141s |        54% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3964
+   Initializing dofs...
+    total    = 17763
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.482s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0506s |        10% |
+| assembly_system                 |         1 |     0.018s |       3.7% |
+| refining                        |         1 |    0.0163s |       3.4% |
+| setup_dofs                      |         1 |    0.0398s |       8.3% |
+| solve_iterative                 |         1 |     0.318s |        66% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7654
+   Initializing dofs...
+    total    = 30179
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.87s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0597s |       3.2% |
+| assembly_system                 |         1 |    0.0245s |       1.3% |
+| refining                        |         1 |    0.0199s |       1.1% |
+| setup_dofs                      |         1 |    0.0478s |       2.6% |
+| solve_iterative                 |         1 |     0.655s |        35% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 15007
+   Initializing dofs...
+    total    = 52985
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      1.78s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0907s |       5.1% |
+| assembly_system                 |         1 |    0.0451s |       2.5% |
+| refining                        |         1 |    0.0252s |       1.4% |
+| setup_dofs                      |         1 |    0.0799s |       4.5% |
+| solve_iterative                 |         1 |       1.5s |        85% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28729
+   Initializing dofs...
+    total    = 91345
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      4.42s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.092s |       2.1% |
+| assembly_system                 |         1 |    0.0752s |       1.7% |
+| refining                        |         1 |     0.037s |      0.84% |
+| setup_dofs                      |         1 |     0.133s |         3% |
+| solve_iterative                 |         1 |         3s |        68% |
++---------------------------------+-----------+------------+------------+
+
+
+real 9.76
+user 146.25
+sys 4.40
+
+Running with 32 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 1024
+   Initializing dofs...
+    total    = 7005
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.199s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0409s |        21% |
+| assembly_system                 |         1 |   0.00559s |       2.8% |
+| make_grid                       |         1 |   0.00785s |       3.9% |
+| setup_dofs                      |         1 |    0.0224s |        11% |
+| solve_iterative                 |         1 |    0.0525s |        26% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 1
+  Number of elements = 1969
+   Initializing dofs...
+    total    = 10761
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.314s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0392s |        12% |
+| assembly_system                 |         1 |   0.00639s |         2% |
+| refining                        |         1 |    0.0118s |       3.8% |
+| setup_dofs                      |         1 |    0.0229s |       7.3% |
+| solve_iterative                 |         1 |     0.164s |        52% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 2
+  Number of elements = 3961
+   Initializing dofs...
+    total    = 17738
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.528s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      0.05s |       9.5% |
+| assembly_system                 |         1 |    0.0115s |       2.2% |
+| refining                        |         1 |    0.0143s |       2.7% |
+| setup_dofs                      |         1 |    0.0347s |       6.6% |
+| solve_iterative                 |         1 |     0.353s |        67% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 3
+  Number of elements = 7648
+   Initializing dofs...
+    total    = 30167
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  20 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |     0.835s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |     0.059s |       7.1% |
+| assembly_system                 |         1 |    0.0169s |         2% |
+| refining                        |         1 |    0.0176s |       2.1% |
+| setup_dofs                      |         1 |    0.0419s |         5% |
+| solve_iterative                 |         1 |      0.63s |        75% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 4
+  Number of elements = 14986
+   Initializing dofs...
+    total    = 52905
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |       2.8s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0855s |       3.1% |
+| assembly_system                 |         1 |    0.0297s |       1.1% |
+| refining                        |         1 |    0.0201s |      0.72% |
+| setup_dofs                      |         1 |    0.0661s |       2.4% |
+| solve_iterative                 |         1 |      1.52s |        54% |
++---------------------------------+-----------+------------+------------+
+
+   Refining mesh, cycle number 5
+  Number of elements = 28684
+   Initializing dofs...
+    total    = 91303
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  21 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      2.71s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |    0.0768s |       2.8% |
+| assembly_system                 |         1 |     0.059s |       2.2% |
+| refining                        |         1 |    0.0284s |         1% |
+| setup_dofs                      |         1 |      0.11s |       4.1% |
+| solve_iterative                 |         1 |      2.35s |        87% |
++---------------------------------+-----------+------------+------------+
+
+
+real 8.34
+user 234.89
+sys 10.10
+
+--------------------------------
+Config.prm parameters:
+--------------------------------
+subsection Geometry
+  set Number of cells per edge        = 32
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 5
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+Scaling run finished at Tue Dec 23 11:35:07 CET 2025

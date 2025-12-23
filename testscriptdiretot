@@ -1,0 +1,27 @@
+#!/bin/bash
+
+EXEC=./original46
+OUTFILE=Direct2D.out
+
+PROCS=(8 16 32 64)
+
+echo "Scaling run started at $(date)" >> "$OUTFILE"
+echo "--------------------------------" >> "$OUTFILE"
+
+for n in "${PROCS[@]}"; do
+    echo "" >> "$OUTFILE"
+    echo "Running with $n mesh" >> "$OUTFILE"
+    echo "----------------------------" >> "$OUTFILE"
+
+    if [ "$n" -eq 1 ]; then
+        /usr/bin/time -p "$EXEC" "$n" >> "$OUTFILE" 2>&1
+    else
+        /usr/bin/time -p "$EXEC" "$n" >> "$OUTFILE" 2>&1
+    fi
+done
+
+
+
+
+echo "" >> "$OUTFILE"
+echo "Scaling run finished at $(date)" >> "$OUTFILE"

@@ -1,0 +1,281 @@
+Scaling run started at Tue Dec 23 11:26:02 CET 2025
+--------------------------------
+
+Running with 4 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      58.2s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |         6s |        10% |
+| assembly_system                 |         1 |      11.3s |        19% |
+| make_grid                       |         1 |     0.424s |      0.73% |
+| setup_dofs                      |         1 |      4.29s |       7.4% |
+| solve_iterative                 |         1 |      36.1s |        62% |
++---------------------------------+-----------+------------+------------+
+
+
+real 58.97
+user 230.82
+sys 4.98
+
+Running with 6 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      41.4s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      4.29s |        10% |
+| assembly_system                 |         1 |      8.07s |        19% |
+| make_grid                       |         1 |     0.395s |      0.95% |
+| setup_dofs                      |         1 |      3.38s |       8.2% |
+| solve_iterative                 |         1 |      25.2s |        61% |
++---------------------------------+-----------+------------+------------+
+
+
+real 42.23
+user 246.74
+sys 5.56
+
+Running with 8 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      31.8s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      3.11s |       9.8% |
+| assembly_system                 |         1 |      5.98s |        19% |
+| make_grid                       |         1 |      0.38s |       1.2% |
+| setup_dofs                      |         1 |      2.62s |       8.2% |
+| solve_iterative                 |         1 |      19.6s |        62% |
++---------------------------------+-----------+------------+------------+
+
+
+real 32.61
+user 252.99
+sys 6.08
+
+Running with 10 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      25.5s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      2.56s |        10% |
+| assembly_system                 |         1 |      5.02s |        20% |
+| make_grid                       |         1 |     0.495s |       1.9% |
+| setup_dofs                      |         1 |      2.26s |       8.8% |
+| solve_iterative                 |         1 |      15.1s |        59% |
++---------------------------------+-----------+------------+------------+
+
+
+real 26.34
+user 253.81
+sys 6.86
+
+Running with 12 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |        23s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      2.25s |       9.8% |
+| assembly_system                 |         1 |      4.44s |        19% |
+| make_grid                       |         1 |      0.39s |       1.7% |
+| setup_dofs                      |         1 |      1.95s |       8.5% |
+| solve_iterative                 |         1 |      13.9s |        60% |
++---------------------------------+-----------+------------+------------+
+
+
+real 23.83
+user 274.88
+sys 7.46
+
+Running with 14 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      19.6s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      2.02s |        10% |
+| assembly_system                 |         1 |      3.87s |        20% |
+| make_grid                       |         1 |     0.349s |       1.8% |
+| setup_dofs                      |         1 |      1.76s |         9% |
+| solve_iterative                 |         1 |      11.5s |        59% |
++---------------------------------+-----------+------------+------------+
+
+
+real 20.43
+user 273.15
+sys 8.27
+
+Running with 16 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  23 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      18.4s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |      1.71s |       9.3% |
+| assembly_system                 |         1 |      3.35s |        18% |
+| make_grid                       |         1 |     0.349s |       1.9% |
+| setup_dofs                      |         1 |      1.58s |       8.6% |
+| solve_iterative                 |         1 |      11.4s |        62% |
++---------------------------------+-----------+------------+------------+
+
+
+real 19.31
+user 294.29
+sys 8.53
+
+Running with 32 process(es)
+----------------------------
+   Generating the mesh...
+  Number of elements = 32768
+   Initializing dofs...
+    total    = 594663
+   Assembling the system...
+   Building preconditioners...
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+WARNING:  When no nullspace vector is specified, the number
+of PDE equations must equal the nullspace dimension.
+   Solving iterative...
+  22 FGMRES iterations
+
+
++---------------------------------------------+------------+------------+
+| Total wallclock time elapsed since start    |      12.4s |            |
+|                                             |            |            |
+| Section                         | no. calls |  wall time | % of total |
++---------------------------------+-----------+------------+------------+
+| assemble_preconditioners        |         1 |       1.2s |       9.7% |
+| assembly_system                 |         1 |      1.86s |        15% |
+| make_grid                       |         1 |     0.449s |       3.6% |
+| setup_dofs                      |         1 |       1.1s |       8.9% |
+| solve_iterative                 |         1 |      7.67s |        62% |
++---------------------------------+-----------+------------+------------+
+
+
+real 13.43
+user 396.49
+sys 17.26
+
+--------------------------------
+Config.prm parameters:
+--------------------------------
+subsection Geometry
+  set Number of cells per edge        = 32
+  set Stokes degree = 1
+  set Elasticity degree = 1
+#  set Fluid weight        = 100
+#  set Solid weight        = 10
+end
+
+subsection Refinement
+  set Refinement cycles = 0
+end
+
+subsection Physics
+  set Viscosity = 2.0
+  set mu = 1.0
+  set lambda = 1.0
+end
+
+Scaling run finished at Tue Dec 23 11:29:59 CET 2025

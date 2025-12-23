@@ -1,0 +1,95 @@
+Scaling run started at Tue Dec 23 20:20:48 CET 2025
+--------------------------------
+
+Running with 8 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 64
+   Number of degrees of freedom: 531
+   Assembling...
+   Solving...
+   Writing output...
+
+real 0.19
+user 0.14
+sys 0.09
+
+Running with 16 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 256
+   Number of degrees of freedom: 1873
+   Assembling...
+   Solving...
+   Writing output...
+
+real 0.20
+user 0.17
+sys 0.19
+
+Running with 32 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 1024
+   Number of degrees of freedom: 7005
+   Assembling...
+   Solving...
+   Writing output...
+
+real 0.29
+user 0.53
+sys 0.24
+
+Running with 64 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 4096
+   Number of degrees of freedom: 27061
+   Assembling...
+   Solving...
+   Writing output...
+
+real 0.57
+user 1.63
+sys 0.38
+
+Running with 128 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 16384
+   Number of degrees of freedom: 106341
+   Assembling...
+   Solving...
+   Writing output...
+
+real 1.91
+user 3.47
+sys 0.54
+
+Running with 256 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 65536
+   Number of degrees of freedom: 421573
+   Assembling...
+   Solving...
+   Writing output...
+
+real 8.79
+user 12.07
+sys 1.84
+
+Running with 512 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 262144
+   Number of degrees of freedom: 1678725
+   Assembling...
+   Solving...
+   Writing output...
+
+real 51.79
+user 59.74
+sys 10.67
+
+Scaling run finished at Tue Dec 23 20:21:52 CET 2025

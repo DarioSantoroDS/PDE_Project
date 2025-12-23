@@ -1,0 +1,9 @@
+Buonasera, sì è disponibile la versione 9.7.1
+
+Per ora il limite su coda cpu è 28 thread, dato che il totale è 112 per 5 nodi, e 112 è circa il numero di utenti.
+Ma è il limite di quelli che si possono chiedere a PBS, non il limite di quelli che si possono usare:
+se chiede 28 thread su cpu0X, e cpu0X è libera, pbsnodes -aSj mostrerà 112-28 cpus disponibili per essere richieste,
+ma, finché nessuno le richiederà, gliele lascerà usare tutte e 112.
+I nodi hanno 2 CPU Xeon, ognuna con 28 core fisici; ogni core ha 2 thread logici.
+
+Saluti,

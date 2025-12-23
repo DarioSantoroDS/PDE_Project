@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N pde_run
+#PBS -l select=1:ncpus=8
+#PBS -l walltime=1:00:00
+#PBS -j oe
+#PBS -V
+#PBS 
+
+cd $PBS_O_WORKDIR
+
+apptainer exec /software/containers/mk/amsc_mk_2025.sif bash -c "
+    source /u/sw/etc/bash.bashrc
+    module load gcc-glibc
+    module load dealii
+    mpirun -n 8 ./my_dealii_binary 128
+"

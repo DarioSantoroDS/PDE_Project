@@ -1,0 +1,110 @@
+void
+FluidStructureProblem::assemble_preconditioners()
+{
+  // if (rebuild_stokes_preconditioner == false)
+  //   return;
+  TimerOutput::Scope t(timer, "assemble_preconditioners");
+
+  pcout << "   Building preconditioners..." << std::endl;
+  stokes_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  const FEValuesExtractors::Vector velocity_components(0);
+  // std::vector<std::vector<bool>>   stokes_constant_modes;
+  // std::cout << stokes_constant_modes.size() << std::endl;
+  // DoFTools::extract_constant_modes(dof_handler,
+  //                                  fe_collection.component_mask(velocity_components),
+  //                                  stokes_constant_modes);
+// Define set of constant modes
+  // std::vector<std::vector<bool>> constant_modes(
+  //   fe_collection.n_components(),
+  //   std::vector<bool>(dof_handler.n_locally_owned_dofs(), false));
+  std::vector<std::vector<bool>> stokes_constant_modes(
+    fe_collection.n_components(),
+    std::vector<bool>(dof_handler.n_locally_owned_dofs(), false));    // Extract constant modes manually
+    for (unsigned int component = 0; component < dim;
+         ++component)
+  {
+    const FEValuesExtractors::Scalar component_extractor(component);
+    const ComponentMask              component_mask(
+      fe_collection.component_mask(component_extractor));
+
+    const IndexSet component_index_set =
+      DoFTools::extract_dofs(dof_handler, component_mask);
+
+    for (unsigned int i = 0; i < dof_handler.locally_owned_dofs().n_elements();
+         ++i)
+      {
+        if (component_index_set.is_element(
+              dof_handler.locally_owned_dofs().nth_index_in_set(i)))
+          {
+            stokes_constant_modes[component][i] = true;
+          }
+        else
+          {
+            stokes_constant_modes[component][i] = false;
+          }
+      }
+    }
+
+
+  TrilinosWrappers::PreconditionAMG::AdditionalData stokes_amg_data;
+  stokes_amg_data.constant_modes = stokes_constant_modes;
+  stokes_amg_data.elliptic              = true;
+  stokes_amg_data.higher_order_elements = true;
+  stokes_amg_data.smoother_sweeps       = 2;
+  stokes_amg_data.aggregation_threshold = 0.02;
+  stokes_preconditioner->initialize(system_matrix.block(0, 0), stokes_amg_data);
+  mp_preconditioner = std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  mp_preconditioner->initialize(pressure_mass.block(1, 1));
+
+  elasticity_preconditioner =
+    std::make_shared<TrilinosWrappers::PreconditionAMG>();
+  const FEValuesExtractors::Vector elasticity_components(dim + 1);
+  // std::vector<std::vector<bool>>   elasticity_constant_modes;
+  // std::cout<<elasticity_constant_modes.size()<<std::endl;
+  // DoFTools::extract_constant_modes(dof_handler,
+  //                                  fe_collection.component_mask(elasticity_components),
+  //                                  elasticity_constant_modes);
+  std::vector<std::vector<bool>> elasticity_constant_modes(
+    fe_collection.n_components(),
+    std::vector<bool>(dof_handler.n_locally_owned_dofs(), false));
+  // Extract constant modes manually
+  for (unsigned int component = dim; component < fe_collection.n_components();
+       ++component)
+    {
+    const FEValuesExtractors::Scalar component_extractor(component);
+    const ComponentMask              component_mask(
+      fe_collection.component_mask(component_extractor));
+
+    const IndexSet component_index_set =
+      DoFTools::extract_dofs(dof_handler, component_mask);
+
+    for (unsigned int i = 0; i < dof_handler.locally_owned_dofs().n_elements();
+         ++i)
+      {
+        if (component_index_set.is_element(
+              dof_handler.locally_owned_dofs().nth_index_in_set(i)))
+          {
+            elasticity_constant_modes[component][i] = true;
+          }
+        else
+          {
+            elasticity_constant_modes[component][i] = false;
+          }
+      }
+    }
+
+
+  TrilinosWrappers::PreconditionAMG::AdditionalData elasticity_amg_data;
+  elasticity_amg_data.constant_modes = elasticity_constant_modes;
+
+  elasticity_amg_data.elliptic              = true;
+  elasticity_amg_data.higher_order_elements = true;
+  elasticity_amg_data.smoother_sweeps       = 2;
+  elasticity_amg_data.aggregation_threshold = 0.02;
+  elasticity_preconditioner->initialize(system_matrix.block(2, 2),
+                                        elasticity_amg_data);
+  // rebuild_stokes_preconditioner = false;
+#ifdef VERBOSE
+  pcout << "Preconditioners assembled!" << std::endl;
+#endif
+}

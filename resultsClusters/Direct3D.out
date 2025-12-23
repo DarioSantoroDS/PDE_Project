@@ -1,0 +1,30 @@
+Scaling run started at Tue Dec 23 20:16:56 CET 2025
+--------------------------------
+
+Running with 8 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 512
+   Number of degrees of freedom: 11631
+   Assembling...
+   Solving...
+   Writing output...
+
+real 1.42
+user 1.97
+sys 0.34
+
+Running with 16 mesh
+----------------------------
+Refinement cycle 0
+   Number of active cells: 4096
+   Number of degrees of freedom: 80311
+   Assembling...
+   Solving...
+   Writing output...
+
+real 30.29
+user 31.25
+sys 4.22
+
+Scaling run finished at Tue Dec 23 20:17:28 CET 2025

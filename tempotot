@@ -1,0 +1,19 @@
+TimeTOT
+
+1ProcNoRefine2D
+
+real    0m35.270s
+user    0m36.248s
+sys     0m1.284s
+
+2ProcNoRefine2D
+
+real    0m27.514s
+user    0m53.615s
+sys     0m0.886s
+
+4ProcNoRefine2D
+
+real    0m15.081s
+user    0m58.419s
+sys     0m1.726s
