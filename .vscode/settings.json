@@ -98,5 +98,6 @@
     },
     "terminal.integrated.defaultProfile.linux": "bash_with_dealii",
     "cmake.options.statusBarVisibility": "visible",
-    "editor.suggest.showStatusBar": false
+    "editor.suggest.showStatusBar": false,
+    "notebook.output.scrolling": true
 }
