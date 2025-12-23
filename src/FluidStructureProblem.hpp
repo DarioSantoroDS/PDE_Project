@@ -115,9 +115,13 @@ public:
                                           "Elasticity degree"))
     , triangulation(
         MPI_COMM_WORLD,
-        Triangulation<dim>::MeshSmoothing::limit_level_difference_at_vertices,
-        parallel::distributed::Triangulation<
-          dim>::Settings::no_automatic_repartitioning)
+        // Triangulation<dim>::MeshSmoothing::limit_level_difference_at_vertices
+        typename Triangulation<dim>::MeshSmoothing(
+          Triangulation<dim>::smoothing_on_refinement |
+          Triangulation<dim>::smoothing_on_coarsening)
+        // , parallel::distributed::Triangulation<
+        //   dim>::Settings::no_automatic_repartitioning
+        )
     , stokes_fe(FE_Q<dim>(stokes_degree + 1),
                 dim,
                 FE_Q<dim>(stokes_degree),

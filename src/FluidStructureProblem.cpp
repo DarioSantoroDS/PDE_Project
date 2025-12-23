@@ -147,7 +147,7 @@ FluidStructureProblem::make_grid()
   //       }
   //   });
 
-  // // 4. Force a repartition now that weights and IDs are defined
+  // // Force a repartition now that weights and IDs are defined
   // triangulation.repartition();
 #ifdef VERBOSE
   pcout << "Mesh generated!" << std::endl;
@@ -888,8 +888,7 @@ FluidStructureProblem::assemble_preconditioners()
   const FEValuesExtractors::Vector velocity_components(0);
   std::vector<std::vector<bool>>   stokes_constant_modes;
   DoFTools::extract_constant_modes(dof_handler,
-                                   stokes_fe.component_mask(
-                                     velocity_components),
+                                   fe_collection.component_mask(velocity_components),
                                    stokes_constant_modes);
   TrilinosWrappers::PreconditionAMG::AdditionalData stokes_amg_data;
   stokes_amg_data.constant_modes = stokes_constant_modes;
@@ -907,8 +906,7 @@ FluidStructureProblem::assemble_preconditioners()
   const FEValuesExtractors::Vector elasticity_components(dim + 1);
   std::vector<std::vector<bool>>   elasticity_constant_modes;
   DoFTools::extract_constant_modes(dof_handler,
-                                   elasticity_fe.component_mask(
-                                     elasticity_components),
+                                   fe_collection.component_mask(elasticity_components),
                                    elasticity_constant_modes);
   TrilinosWrappers::PreconditionAMG::AdditionalData elasticity_amg_data;
   elasticity_amg_data.constant_modes = elasticity_constant_modes;
