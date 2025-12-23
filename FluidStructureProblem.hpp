@@ -367,7 +367,7 @@ private:
 };
 
 
-template <int dim>
+
 class ExactForce_g : public Function<dim>
 {
 public:
@@ -407,7 +407,7 @@ public:
 };
 
 
-template <int dim>
+
 class ExactNeumann_hRight : public Function<dim>
 {
 public:
@@ -495,7 +495,7 @@ private:
                 FE_Q<dim>(stokes_degree),
                 1,
                 FE_Nothing<dim>(),
-                dim)
+                dim)           
     , mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
     , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
     , elasticity_fe(FE_Nothing<dim>(),
@@ -505,7 +505,7 @@ private:
                     FE_Q<dim>(elasticity_degree),
                     dim)
     , dof_handler(triangulation)
-    , viscosity(2)
+    , viscosity(1)
     , lambda(1)
     , mu(1)
     , pcout(std::cout, mpi_rank == 0)
@@ -533,6 +533,9 @@ private:
   void
   output_matrix() const;
 #endif
+
+  double
+  compute_velocity_error(const VectorTools::NormType &norm_type) const;
 
   void
   refine_mesh();

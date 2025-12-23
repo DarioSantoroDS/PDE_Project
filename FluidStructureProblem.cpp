@@ -1,5 +1,9 @@
 #include "FluidStructureProblem.hpp"
 
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/vector_tools_integrate_difference.h>
+
+
 ParameterReader::ParameterReader(ParameterHandler &paramhandler)
   : prm(paramhandler)
 {}
@@ -51,16 +55,34 @@ FluidStructureProblem::make_grid()
   const int fluid_weight = prm.get_integer("Fluid weight");
     const int solid_weight = prm.get_integer("Solid weight");
   prm.leave_subsection();
-  GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1, true);
-  // FACCIA SINISTRA: ID = 3 DA CONTRLLARE
-  // FACCIA DESTRA: ID = 1 DA CONTROLLARE
+  GridGenerator::subdivided_hyper_cube(triangulation, problemsize, -1, 1);
 
   for (const auto &cell : triangulation.active_cell_iterators())
-    {
-      for (const auto &face : cell->face_iterators())
-        if (face->at_boundary() && (face->center()[dim - 1] == 1))
+  {
+    if (cell->material_id() != fluid_domain_id)
+      continue; // SOLO fluido
+
+    for (const auto &face : cell->face_iterators())
+      {
+        if (!face->at_boundary())
+          continue;
+
+        const auto &x = face->center();
+
+        // sopra
+        if (std::fabs(x[dim - 1] - 1.0) < 1e-12)
           face->set_all_boundary_ids(1);
-    }
+
+        // sinistra
+        else if (std::fabs(x[0] + 1.0) < 1e-12)
+          face->set_all_boundary_ids(2);
+
+        // destra
+        else if (std::fabs(x[0] - 1.0) < 1e-12)
+          face->set_all_boundary_ids(3);
+      }
+  }
+
   for (const auto &cell : triangulation.active_cell_iterators())
     {
       if (((std::fabs(cell->center()[0]) < 0.25) &&
@@ -169,7 +191,7 @@ FluidStructureProblem::setup_dofs()
   const FEValuesExtractors::Vector velocities(0);
   VectorTools::interpolate_boundary_values(dof_handler,
                                            1,
-                                           StokesBoundaryValues(),
+                                           ExactSolution_u(),
                                            constraints,
                                            fe_collection.component_mask(
                                              velocities));
@@ -178,7 +200,8 @@ FluidStructureProblem::setup_dofs()
   VectorTools::interpolate_boundary_values(
     dof_handler,
     0,
-    Functions::ZeroFunction<dim>(dim + 1 + dim),
+    ExactSolution_d(),
+    //Functions::ZeroFunction<dim>(dim + 1 + dim),
     constraints,
     fe_collection.component_mask(displacements));
   // There are more constraints we have to handle, though: we have to make
@@ -405,6 +428,14 @@ FluidStructureProblem::assemble_system()
   system_rhs    = 0.0;
   pressure_mass = 0.0;
 
+  // MANU
+  ExactForce_f right_hand_side(viscosity);
+  ExactForce_g solid_rhs(mu);
+  ExactNeumann_hRight neumann_rhs(viscosity);
+  ExactNeumann_hLeft neumann_left(viscosity);
+  // END
+
+
   const QGauss<dim> stokes_quadrature(stokes_degree + 2);
   const QGauss<dim> elasticity_quadrature(elasticity_degree + 2);
 
@@ -454,7 +485,7 @@ FluidStructureProblem::assemble_system()
   std::vector<types::global_dof_index> neighbor_dof_indices(
     stokes_dofs_per_cell);
 
-  const Functions::ZeroFunction<dim> right_hand_side(dim + 1);
+  // const Functions::ZeroFunction<dim> right_hand_side(dim + 1);
 
   // ...to variables that allow us to extract certain components of the
   // shape functions and cache their values rather than having to recompute
@@ -515,6 +546,18 @@ FluidStructureProblem::assemble_system()
 
           for (unsigned int q = 0; q < fe_values.n_quadrature_points; ++q)
             {
+              // MANIF
+              Tensor<1, dim> f_q;
+              const Point<dim> &p_q = fe_values.quadrature_point(q);
+              for (unsigned int d = 0; d < dim; ++d)
+                  f_q[d] = right_hand_side.value(p_q, d);
+              
+
+              Tensor<1, dim> g_q;
+              for (unsigned int d = 0; d < dim; ++d)
+                  g_q[d] = solid_rhs.value(p_q, d + (dim+1)); // offset sulle componenti del solido
+              // END MANIF
+
               for (unsigned int k = 0; k < dofs_per_cell; ++k)
                 {
                   stokes_symgrad_phi_u[k] =
@@ -522,6 +565,16 @@ FluidStructureProblem::assemble_system()
                   stokes_div_phi_u[k] = fe_values[velocities].divergence(k, q);
                   stokes_phi_p[k]     = fe_values[pressure].value(k, q);
                 }
+
+              // Right-hand side contribution
+              for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                  const Tensor<1, dim> phi_iflu = fe_values[velocities].value(i, q);
+                  local_rhs[i] += f_q * phi_iflu * fe_values.JxW(q);
+
+                  const Tensor<1, dim> phi_isol= fe_values[displacements].value(i, q);
+                  local_rhs[i] += g_q * phi_isol * fe_values.JxW(q);
+              }
 
               for (unsigned int i = 0; i < dofs_per_cell; ++i)
                 for (unsigned int j = 0; j < dofs_per_cell; ++j)
@@ -538,6 +591,51 @@ FluidStructureProblem::assemble_system()
                     fe_values[pressure].value(j, q) / viscosity *
                     fe_values.JxW(q);
             }
+
+
+
+
+            std::vector<unsigned int> neumann_boundaries = {2, 3};
+            for (unsigned int f = 0; f < GeometryInfo<dim>::faces_per_cell; ++f)
+            {
+                if (cell->face(f)->at_boundary())
+                {
+                    unsigned int bid = cell->face(f)->boundary_id();
+                    Function<dim> *neumann = nullptr;
+
+                    if (bid == 3)
+                        neumann = &neumann_rhs;
+                    else if (bid == 2)
+                        neumann = &neumann_left;
+
+                    if (neumann)
+                    {
+                        FEFaceValues<dim> fe_face_values(
+                            fe_values.get_fe(),
+                            common_face_quadrature,
+                            update_values | update_quadrature_points | update_JxW_values | update_normal_vectors);
+
+                        fe_face_values.reinit(cell, f);
+
+                        for (unsigned int q = 0; q < fe_face_values.n_quadrature_points; ++q)
+                        {
+                            const Point<dim> &p_q = fe_face_values.quadrature_point(q);
+                            Tensor<1, dim> t_q;
+                            for (unsigned int d = 0; d < dim; ++d)
+                                t_q[d] = neumann->value(p_q, d);
+
+                            for (unsigned int i = 0; i < stokes_dofs_per_cell; ++i)
+                            {
+                                const Tensor<1, dim> phi_i = fe_face_values[velocities].value(i, q);
+                                local_rhs[i] += t_q * phi_i * fe_face_values.JxW(q);
+                            }
+                        }
+                    }
+                }
+            }
+
+
+
         }
       else
         {
@@ -1062,3 +1160,11 @@ void FluidStructureProblem::refine_mesh()
     pcout << "Refinement done!" << std::endl;
 }
 
+
+
+
+double FluidStructureProblem::compute_velocity_error(
+    const dealii::VectorTools::NormType &norm_type) const
+{
+   
+}
