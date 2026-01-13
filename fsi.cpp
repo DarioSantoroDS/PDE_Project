@@ -76,10 +76,10 @@ main(int argc, char *argv[])
   // }
 
   double l2_error = flow_problem.compute_velocity_error(VectorTools::L2_norm);
-  double h1_error = flow_problem.compute_velocity_error(VectorTools::H1_seminorm);
+  //double h1_error = flow_problem.compute_velocity_error(VectorTools::H1_seminorm);
 
   std::cout << "L2 velocity error: " << l2_error << std::endl;
-  std::cout << "H1 velocity error: " << h1_error << std::endl;
+  // std::cout << "H1 velocity error: " << h1_error << std::endl;
 
   return 0;
 }
