@@ -179,6 +179,77 @@ public:
   }
 };
 
+class ExactSolution_onlyu : public Function<dim>
+{
+public:
+  ExactSolution_onlyu()
+    : Function<dim>(dim) // 2 componenti
+  {}
+
+  // ======================
+  // valore singola componente
+  // ======================
+  virtual double
+  value(const Point<dim> &p,
+        const unsigned int component = 0) const override
+  {
+    const double x = p[0];
+    const double y = p[1];
+
+    if (component == 0)
+      return (1.0/256.0) * std::pow(1.0 - 16.0*x*x, 2)
+             * y * (-1.0 + 4.0*y*y);
+
+    if (component == 1)
+      return -(1.0/64.0) * x * (-1.0 + 16.0*x*x)
+             * std::pow(1.0 - 4.0*y*y, 2);
+
+    return 0.0;
+  }
+
+  // ======================
+  // valore vettoriale
+  // ======================
+  virtual void
+  vector_value(const Point<dim> &p,
+               Vector<double> &values) const override
+  {
+    AssertDimension(values.size(), this->n_components);
+
+    for (unsigned int c = 0; c < this->n_components; ++c)
+      values[c] = value(p, c);
+  }
+
+  virtual void
+  vector_gradient(const Point<dim> &p,
+           std::vector<Tensor<1, dim>> &grad) const override
+  {
+    AssertDimension(grad.size(), dim);
+
+    const double x = p[0];
+    const double y = p[1];
+
+    // ∂u0/∂x
+    grad[0][0] =
+      (1.0/4.0) * x * (-1.0 + 16.0*x*x) * y * (-1.0 + 4.0*y*y);
+
+    // ∂u0/∂y
+    grad[0][1] =
+      (1.0/256.0) * std::pow(1.0 - 16.0*x*x, 2)
+      * (-1.0 + 12.0*y*y);
+
+    // ∂u1/∂x
+    grad[1][0] =
+      (1.0/64.0) * (1.0 - 48.0*x*x)
+      * std::pow(1.0 - 4.0*y*y, 2);
+
+    // ∂u1/∂y
+    grad[1][1] =
+      (1.0/4.0) * x * (-1.0 + 16.0*x*x)
+      * y * (1.0 - 4.0*y*y);
+  }
+};
+
   class ExactSolution_d : public Function<dim>
 {
 public:
