@@ -104,6 +104,115 @@ public:
 
   static constexpr unsigned int dim = 2;
 
+  template <int dim>
+class ExactSolution_FSI : public Function<dim>
+{
+public:
+  ExactSolution_FSI()
+    : Function<dim>(dim + 1 + dim) // 5 componenti: u(2), p(1), d(2)
+  {}
+
+  // ======================
+  // valore singola componente
+  // ======================
+  virtual double
+  value(const Point<dim> &p,
+        const unsigned int component = 0) const override
+  {
+    const double x = p[0];
+    const double y = p[1];
+
+    // -------- velocity u --------
+    if (component == 0) // u0
+      return (1.0/256.0) * std::pow(1.0 - 16.0*x*x, 2)
+             * y * (-1.0 + 4.0*y*y);
+
+    if (component == 1) // u1
+      return -(1.0/64.0) * x * (-1.0 + 16.0*x*x)
+             * std::pow(1.0 - 4.0*y*y, 2);
+
+    // -------- pressure p --------
+    if (component == 2)
+      return (x - 1.0/4.0)*(x + 1.0/4.0)
+             * (y - 1.0/2.0)*(y + 1.0/2.0);
+
+    // -------- displacement d --------
+    if (component == 3) // d0
+      return (1.0/256.0) * std::pow(1.0 - 16.0*x*x, 2)
+             * y * (-1.0 + 4.0*y*y);
+
+    if (component == 4) // d1
+      return -(1.0/64.0) * x * (-1.0 + 16.0*x*x)
+             * std::pow(1.0 - 4.0*y*y, 2);
+
+    return 0.0;
+  }
+
+  // ======================
+  // valore vettoriale
+  // ======================
+  virtual void
+  vector_value(const Point<dim> &p,
+               Vector<double> &values) const override
+  {
+    AssertDimension(values.size(), this->n_components);
+    for (unsigned int c = 0; c < this->n_components; ++c)
+      values[c] = value(p, c);
+  }
+
+  // ======================
+  // gradiente vettoriale
+  // grad[i][j] = ∂(componente i)/∂x_j
+  // ======================
+  virtual void
+  vector_gradient(const Point<dim> &p,
+                  std::vector<Tensor<1, dim>> &grad) const override
+  {
+    AssertDimension(grad.size(), this->n_components);
+
+    for (auto &g : grad)
+      g = 0.0;
+
+    const double x = p[0];
+    const double y = p[1];
+
+    // ---- grad u0 ----
+    grad[0][0] =
+      (1.0/4.0) * x * (-1.0 + 16.0*x*x) * y * (-1.0 + 4.0*y*y);
+
+    grad[0][1] =
+      (1.0/256.0) * std::pow(1.0 - 16.0*x*x, 2)
+      * (-1.0 + 12.0*y*y);
+
+    // ---- grad u1 ----
+    grad[1][0] =
+      (1.0/64.0) * (1.0 - 48.0*x*x)
+      * std::pow(1.0 - 4.0*y*y, 2);
+
+    grad[1][1] =
+      (1.0/4.0) * x * (-1.0 + 16.0*x*x)
+      * y * (1.0 - 4.0*y*y);
+
+    // ---- grad p ----
+    grad[2][0] =
+      (x - 1.0/4.0)*(y - 1.0/2.0)*(y + 1.0/2.0)
+    + (x + 1.0/4.0)*(y - 1.0/2.0)*(y + 1.0/2.0);
+
+    grad[2][1] =
+      (x - 1.0/4.0)*(x + 1.0/4.0)*(y - 1.0/2.0)
+    + (x - 1.0/4.0)*(x + 1.0/4.0)*(y + 1.0/2.0);
+
+    // ---- grad d0 ----
+    grad[3][0] = grad[0][0];
+    grad[3][1] = grad[0][1];
+
+    // ---- grad d1 ----
+    grad[4][0] = grad[1][0];
+    grad[4][1] = grad[1][1];
+  }
+};
+
+
   class ExactSolution_u : public Function<dim>
 {
 public:

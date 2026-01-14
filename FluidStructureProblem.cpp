@@ -996,6 +996,17 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
   data_out.add_data_vector(material,
                            "material_id",
                            DataOut<dim>::type_cell_data);
+  
+                           ExactSolution_FSI<dim> exact_solution;
+
+Vector<double> exact(locally_relevant_solution.size());
+VectorTools::interpolate(dof_handler, exact_solution, exact);
+
+data_out.add_data_vector(exact,
+                          "exact_solution",
+                          DataOut<dim>::type_dof_data,
+                          data_component_interpretation);
+
 
   data_out.build_patches();
 
@@ -1003,6 +1014,8 @@ FluidStructureProblem::output_results(const unsigned int refinement_cycle) const
     "./", "solution", refinement_cycle, MPI_COMM_WORLD, 2, 8);
   pcout << "   Written solution_" << refinement_cycle << ".pvtu" << std::endl;
 }
+
+
 void FluidStructureProblem::refine_mesh()
 {
     pcout << "Refining mesh..." << std::endl;
