@@ -1,0 +1,4 @@
+processors,elements,dofs,fgmres_iterations,total_wallclock_s,assemble_preconditioners_s,assembly_system_s,make_grid_s,setup_dofs_s,solve_iterative_s,real_s,user_s,sys_s
+1,64,531,14,0.0335,0.0135,0.00209,0.00088,0.00474,0.00327,0.660,0.227,0.190
+4,256,1873,15,0.0859,0.0404,0.00617,0.00245,0.0159,0.0138,0.761,1.136,0.712
+16,1024,7005,20,0.149,0.0301,0.00565,0.00685,0.0186,0.0438,0.911,4.621,3.057
